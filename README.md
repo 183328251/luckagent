@@ -13,6 +13,11 @@
   让你的同事/伙伴与当前最强的模型在飞书群内协同工作，<br>
   不仅只是提升效率与交付质量，更是企业核心能力的沉淀。
 </h3>
+<p align="center">
+  <video src="docs/videos/luckagent-promo-v7.mp4" poster="docs/images/promo-v7-poster.jpg" controls width="100%"></video><br>
+  <sub>🎬 56 秒宣传片 · 配乐 "Carefree" — Kevin MacLeod (incompetech.com)，<a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> 授权</sub>
+</p>
+
 
 把飞书群聊接到 AI agent 引擎的自托管机器人平台。每个飞书机器人背后是一个完整的 agent 引擎——Claude Code（`@anthropic-ai/claude-agent-sdk` / Claude Code CLI），或指向 DeepSeek / MiniMax 官方 Anthropic 兼容端点的同一运行时——在各自独立的工作目录里拥有完整的工具权限：读写文件、跑命令、调 API、收发聊天附件。你在群里 @机器人说一句话，它就在你自己的 Mac 上替你干活，并把过程与产物以卡片形式实时回贴到群里。
 
