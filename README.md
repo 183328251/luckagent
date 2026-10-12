@@ -14,7 +14,7 @@
   不仅只是提升效率与交付质量，更是企业核心能力的沉淀。
 </h3>
 <p align="center">
-https://github.com/user-attachments/assets/38e836f1-ae50-42ca-ab29-d06b968ebfff
+  <video src="https://github.com/user-attachments/assets/38e836f1-ae50-42ca-ab29-d06b968ebfff" controls width="100%"></video>
 </p>
 <p align="center">
   <sub>🎬 56 秒宣传片 · 配乐 "Carefree" — Kevin MacLeod (incompetech.com)，<a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> 授权</sub>
