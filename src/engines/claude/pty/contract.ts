@@ -199,6 +199,12 @@ export type PtyQueryFn = (args: {
  */
 export interface PtyClaudeSession {
   readonly sessionId: string;
+  /**
+   * True when spawned with --resume. False when `resume` was requested but its
+   * transcript was missing on disk and a fresh session (new sessionId) was
+   * started instead — callers must then report `sessionId`, not the stale id.
+   */
+  readonly resumed?: boolean;
   /** Resolves once the TUI input box is ready to accept typing. */
   ready(): Promise<void>;
   /** Type a prompt string into the TUI and submit it. */

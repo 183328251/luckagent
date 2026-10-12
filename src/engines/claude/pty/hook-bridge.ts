@@ -110,7 +110,13 @@ export function createHookBridge(options?: HookBridgeOptions): PtyHookBridge {
       ];
     }
 
-    const settings = { hooks };
+    // Bypass-disclaimer consent. Since the bypass→settings migration, claude
+    // no longer reads `bypassPermissionsModeAccepted` from ~/.claude.json; it
+    // checks `skipDangerousModePermissionPrompt` in user/local/flag/policy
+    // settings. --settings is flagSettings, so declaring it here suppresses the
+    // "WARNING: Bypass Permissions mode" dialog for luckagent-spawned claude
+    // only — the user's own ~/.claude/settings.json is left untouched.
+    const settings = { skipDangerousModePermissionPrompt: true, hooks };
 
     writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
     return settingsPath;

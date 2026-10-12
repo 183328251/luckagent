@@ -27,7 +27,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { openSync, readSync, statSync, closeSync, readFileSync } from 'node:fs';
+import { openSync, readSync, statSync, closeSync, readFileSync, existsSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import type { SDKMessage } from '../executor.js';
@@ -208,12 +208,18 @@ export const ptyQuery = (args: {
       logger,
       onExit: handleSessionExit,
     });
-    if (!sessionId) sessionId = session.sessionId;
+    // Always adopt the session's ACTUAL id: when the requested resume
+    // transcript was missing, the session started fresh under a new id, and
+    // that new id must reach the bridge to replace the stale one.
+    sessionId = session.sessionId;
+    const resumed = session.resumed ?? Boolean(options.resume);
 
     scanner = createJsonlScanner({
       jsonlPath: session.jsonlPath,
       logger,
-      startAtEnd: Boolean(options.resume),
+      // Only skip existing lines when we really resumed; a fresh session's
+      // transcript starts empty and every line is new.
+      startAtEnd: resumed,
     });
 
     // Stop-hook → synthesize a terminal `result` after a short drain delay.
@@ -457,7 +463,26 @@ export const ptyQuery = (args: {
         if (!session) await boot; // ensure session exists
         if (!session || disposed) break;
         turnInFlight = true; // a new turn starts the moment we submit the prompt
-        await session.typePrompt(text);
+        try {
+          await session.typePrompt(text);
+        } catch (err) {
+          // typePrompt failed (blocked boot dialog, claude died mid-type …).
+          // Close the turn with the cause instead of leaving it to the stream
+          // ending silently.
+          if (turnInFlight && !disposed) {
+            turnInFlight = false;
+            out.enqueue(
+              synthesizeResult({
+                sessionId: errorSessionId(),
+                isError: true,
+                resultText: err instanceof Error ? err.message : String(err),
+                model: lastUsage.model,
+                usage: { inputTokens: lastUsage.inputTokens, outputTokens: lastUsage.outputTokens },
+              }),
+            );
+          }
+          throw err;
+        }
         // Client-side slash commands (/effort, /model, /status, …) change a
         // setting WITHOUT a model turn → no assistant record, no Stop hook, so
         // no `result` would ever be synthesized and the caller's turn hangs.
@@ -515,6 +540,22 @@ export const ptyQuery = (args: {
     }
   }
 
+  /**
+   * Session id to report on an ERROR result. If claude died before ever
+   * writing its transcript (e.g. exited on a boot dialog), the id is
+   * unresumable — reporting it would get it persisted and make every later
+   * `--resume` fail with "No conversation found". Report '' instead so the
+   * bridge keeps whatever (valid) id it had.
+   */
+  function errorSessionId(): string {
+    if (!session || !sessionId) return sessionId;
+    try {
+      return existsSync(session.jsonlPath) ? sessionId : '';
+    } catch {
+      return sessionId;
+    }
+  }
+
   // ── Exit watchdog ──────────────────────────────────────────────────────────
   /**
    * The claude PTY process exited. If we initiated the teardown (`disposed`),
@@ -531,14 +572,14 @@ export const ptyQuery = (args: {
     // when it died (onboarding/login screens, error text, update prompts …).
     let screenTail = '';
     try {
-      screenTail = session?.screen() ?? ''.split('\n').map((l) => l.trimEnd()).filter(Boolean).slice(-14).join('\n').slice(-1200);
+      screenTail = (session?.screen() ?? '').split('\n').map((l) => l.trimEnd()).filter(Boolean).slice(-14).join('\n').slice(-1200);
     } catch { /* best-effort */ }
     logger.warn({ ...info, turnInFlight, screenTail }, 'ptyQuery: claude exited unexpectedly');
     if (turnInFlight) {
       turnInFlight = false;
       out.enqueue(
         synthesizeResult({
-          sessionId,
+          sessionId: errorSessionId(),
           isError: true,
           resultText: 'claude process exited before the turn completed',
           model: lastUsage.model,

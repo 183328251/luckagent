@@ -29,6 +29,7 @@ const RING_CAP = 64 * 1024;
 
 class PtyClaudeSessionImpl implements IPtyClaudeSession {
   readonly sessionId: string;
+  readonly resumed: boolean;
   readonly jsonlPath: string;
 
   private term: IPty | null = null;
@@ -55,14 +56,26 @@ class PtyClaudeSessionImpl implements IPtyClaudeSession {
     this.rows = opts.rows ?? 40;
     this.vt = new Terminal({ cols: this.cols, rows: this.rows, allowProposedApi: true });
 
-    // Session id: adopt resume id or self-generate.
-    this.sessionId = opts.resume ?? randomUUID();
-
-    // Compute jsonl path: ~/.claude/projects/<sanitized-cwd>/<sessionId>.jsonl
-    // using Claude Code's exact naming rule (claudeProjectsDir) — any mismatch
+    // Compute jsonl paths under ~/.claude/projects/<sanitized-cwd>/ using
+    // Claude Code's exact naming rule (claudeProjectsDir) — any mismatch
     // (relative cwd, '.', spaces, '_', CJK, symlinks) makes the scanner tail a
     // file that never exists and the Feishu card renders blank.
-    this.jsonlPath = path.join(claudeProjectsDir(opts.cwd), `${this.sessionId}.jsonl`);
+    const projectsDir = claudeProjectsDir(opts.cwd);
+
+    // Session id: adopt resume id or self-generate. A resume id whose
+    // transcript was never written (claude died at boot, after the bridge had
+    // already persisted our self-generated id) makes `claude --resume` exit 1
+    // with "No conversation found" on EVERY later turn — the chat is wedged
+    // until /reset. Start a fresh session instead; the new id flows back to the
+    // bridge with the next result and replaces the bad one.
+    let resume = opts.resume;
+    if (resume && !fs.existsSync(path.join(projectsDir, `${resume}.jsonl`))) {
+      this.log.warn({ resume, projectsDir }, 'pty-session: resume transcript missing — starting a fresh session');
+      resume = undefined;
+    }
+    this.resumed = Boolean(resume);
+    this.sessionId = resume ?? randomUUID();
+    this.jsonlPath = path.join(projectsDir, `${this.sessionId}.jsonl`);
 
     this.spawn();
   }
@@ -129,8 +142,8 @@ class PtyClaudeSessionImpl implements IPtyClaudeSession {
     this.ensureFolderTrusted(opts.cwd);
     const args: string[] = [];
 
-    if (opts.resume) {
-      args.push('--resume', opts.resume);
+    if (this.resumed) {
+      args.push('--resume', this.sessionId);
     } else {
       args.push('--session-id', this.sessionId);
     }
@@ -306,16 +319,33 @@ class PtyClaudeSessionImpl implements IPtyClaudeSession {
       // One-time acceptance screens can still appear if the pre-seeded
       // ~/.claude.json flag got clobbered (e.g. a concurrently-open
       // interactive claude rewriting its config — seen in the field).
-      // Recognize the bypass-permissions disclaimer and accept it ourselves:
-      // option "2. Yes, I accept" + Enter.
+      // Recognize the bypass-permissions disclaimer and accept it ourselves.
+      // Since claude 2.1.29x the menu is index-less with focus on "No, exit",
+      // so a blind digit + Enter EXITS claude: only press Enter once the screen
+      // confirms the pointer sits on "Yes, I accept".
       if (!bypassAnswered && sq.includes('bypasspermissionsmode') && sq.includes('yes,iaccept')) {
-        this.log.warn('pty-session: bypass-permissions dialog detected despite seeding — accepting (option 2)');
-        this.term?.write('2');
-        await sleep(150);
-        this.term?.write('\r');
         bypassAnswered = true;
         idleSince = 0;
-        await sleep(600);
+        this.log.warn('pty-session: bypass-permissions dialog detected despite seeding — selecting "Yes, I accept"');
+        const focus = await this.focusBypassAccept();
+        if (focus === 'focused') {
+          this.term?.write('\r');
+          await sleep(600);
+        } else if (focus === 'failed') {
+          // Esc and Enter both mean "No, exit" here, and typing the prompt into
+          // the menu would end the same way — fail the turn with a clear cause
+          // instead of timing out into a dead process.
+          this.log.error(
+            { screen: this.screen().slice(-800) },
+            'pty-session: could not focus "Yes, I accept" — NOT pressing Enter (it would pick "No, exit")',
+          );
+          throw new Error(
+            'pty-session: claude is blocked on the Bypass Permissions disclaimer and it could not be auto-accepted. ' +
+              'Add "skipDangerousModePermissionPrompt": true to ~/.claude/settings.json (or run claude ' +
+              '--dangerously-skip-permissions once interactively and accept), then retry.',
+          );
+        }
+        // 'gone': the key itself resolved the menu (legacy digit-select).
         continue;
       }
       const running = sq.includes('esctointerrupt');
@@ -334,6 +364,35 @@ class PtyClaudeSessionImpl implements IPtyClaudeSession {
       await sleep(POLL);
     }
     this.log.warn('pty-session: idle-input wait timed out — typing anyway');
+  }
+
+  /**
+   * Move the bypass-disclaimer menu pointer onto "Yes, I accept". Tries ↓
+   * first (works for both indexed and index-less menus), then the legacy "2"
+   * digit. Returns:
+   *   - 'focused' — the screen shows `❯` on "Yes, I accept"; caller presses Enter.
+   *   - 'gone'    — the dialog vanished after a key (a digit-select build that
+   *                 confirms immediately); nothing left to press.
+   *   - 'failed'  — pointer could not be confirmed; caller must NOT press Enter.
+   */
+  private async focusBypassAccept(): Promise<'focused' | 'gone' | 'failed'> {
+    const onAccept = () => /❯\s*(?:\d\.\s*)?Yes, I accept/.test(this.screen());
+    const dialogShown = () => this.screen().includes('Yes, I accept');
+    // The ring (detector) can run ahead of the headless screen grid; wait for
+    // the grid to show the dialog so "gone" below can't be a false positive.
+    for (let i = 0; i < 10 && !dialogShown(); i++) await sleep(150);
+    if (!dialogShown()) return 'failed';
+    if (onAccept()) return 'focused';
+    for (const key of ['\x1b[B', '2']) {
+      if (!this.term || this.disposed) return 'failed';
+      this.term.write(key);
+      for (let i = 0; i < 8; i++) {
+        await sleep(150);
+        if (onAccept()) return 'focused';
+        if (!dialogShown()) return 'gone';
+      }
+    }
+    return 'failed';
   }
 
   async interrupt(): Promise<void> {
