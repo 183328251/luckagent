@@ -2,6 +2,15 @@
 
 版本号 = 根 `package.json`（管理台总览页显示的就是它）。升级：`luckagent update`（git 安装）或重跑一行安装命令（tarball 安装）。git tag 与本文件同步打点。
 
+## v0.7.25 — 2026-10-12
+
+修复新版 Claude Code（2.1.29x）下 PTY 会话启动即退出、之后该群永久无回复的问题。
+
+- **Bypass 确认框导致启动即退出**：新版 Claude Code 不再读 `~/.claude.json` 里预写的 `bypassPermissionsModeAccepted`，"Bypass Permissions mode" 确认框照样弹出；且菜单改成无编号、默认焦点在 "No, exit"，原来的自动应答（按 2 + 回车）实际选中了退出。现在 luckagent 在传给 claude 的 `--settings` 里声明 `skipDangerousModePermissionPrompt`（只作用于 bot 启动的 claude，不改你自己的 `~/.claude/settings.json`），确认框不再出现；兜底应答改为确认光标停在 "Yes, I accept" 才回车，确认不了就直接报明确原因，不会误按退出
+- **一次启动失败后整个群卡死**：claude 在写出会话记录前就退出时，它的 session id 仍被记下，之后每条消息都 `--resume` 失败（"No conversation found"），只能 `/reset`。现在出错时不再记下这种 id；已经卡住的群，下一条消息会自动开新会话恢复，无需 `/reset`
+- 退出日志里的 `screenTail` 只记最后 14 行屏幕（原来误记整屏）
+- 测试：新增 PTY 启动确认框、resume 回退、session id 上报用例，全量 917 例通过；并在真实 Claude Code 2.1.295 上验证
+
 ## v0.7.24 — 2026-10-08
 
 默认飞书权限全集扩充（日历 / 邮箱 / 审批 / OKR / 妙记等）。
