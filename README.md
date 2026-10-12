@@ -14,8 +14,8 @@
   不仅只是提升效率与交付质量，更是企业核心能力的沉淀。
 </h3>
 <p align="center">
-  <video src="docs/videos/luckagent-promo-v7.mp4" poster="docs/images/promo-v7-poster.jpg" controls width="100%"></video><br>
-  <sub>🎬 56 秒宣传片 · 配乐 "Carefree" — Kevin MacLeod (incompetech.com)，<a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> 授权</sub>
+  <a href="docs/videos/luckagent-promo-v7.mp4"><img src="docs/images/promo-v7-poster.jpg" alt="Luckagent 宣传片（56 秒）— 点击播放" width="100%"></a><br>
+  <sub>🎬 56 秒宣传片 · 点击上图播放 · 配乐 "Carefree" — Kevin MacLeod (incompetech.com)，<a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> 授权</sub>
 </p>
 
 
