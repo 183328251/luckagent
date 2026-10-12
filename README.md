@@ -1,1 +1,232 @@
-PHAgYWxpZ249ImNlbnRlciI+CiAgPGltZyBzcmM9ImRvY3MvaW1hZ2VzL2Jhbm5lci5qcGciIGFsdD0iTHVja2FnZW5077ya5ZCM5LqL5LiOIENsYXVkZeOAgUdQVCBJbWFnZeOAgVNlZWRyZWFt44CBU2VlZGFuY2Ug5Zyo6aOe5Lmm576k6YeM5Y2P5ZCM77yM5Lqk5LuY54mp5rKJ5reA5Li65LyB5Lia55qE5qC45b+D6IO95YqbIiB3aWR0aD0iMTAwJSI+CjwvcD4KCjxoMSBhbGlnbj0iY2VudGVyIj4KICA8cGljdHVyZT4KICAgIDxzb3VyY2UgbWVkaWE9IihwcmVmZXJzLWNvbG9yLXNjaGVtZTogZGFyaykiIHNyY3NldD0iZG9jcy9pbWFnZXMvbG9nby1sb2NrdXAtZGFyay5wbmciPgogICAgPGltZyBzcmM9ImRvY3MvaW1hZ2VzL2xvZ28tbG9ja3VwLnBuZyIgYWx0PSJMdWNrYWdlbnQiIGhlaWdodD0iODAiPgogIDwvcGljdHVyZT4KPC9oMT4KCjxoMyBhbGlnbj0iY2VudGVyIj4KICDorqnkvaDnmoTlkIzkuosv5LyZ5Ly05LiO5b2T5YmN5pyA5by655qE5qih5Z6L5Zyo6aOe5Lmm576k5YaF5Y2P5ZCM5bel5L2c77yMPGJyPgogIOS4jeS7heWPquaYr+aPkOWNh+aViOeOh+S4juS6pOS7mOi0qOmHj++8jOabtOaYr+S8geS4muaguOW/g+iDveWKm+eahOayiea3gOOAggo8L2gzPgo8cCBhbGlnbj0iY2VudGVyIj4KaHR0cHM6Ly9naXRodWIuY29tL3VzZXItYXR0YWNobWVudHMvYXNzZXRzLzM4ZTgzNmYxLWFlNTAtNDJjYS1hYjI5LWQwNmI5NjhlYmZmZgo8L3A+CjxwIGFsaWduPSJjZW50ZXIiPgogIDxzdWI+8J+OrCA1NiDnp5LlrqPkvKDniYcgwrcg6YWN5LmQICJDYXJlZnJlZSIg4oCUIEtldmluIE1hY0xlb2QgKGluY29tcGV0ZWNoLmNvbSnvvIw8YSBocmVmPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9saWNlbnNlcy9ieS80LjAvIj5DQyBCWSA0LjA8L2E+IOaOiOadgzwvc3ViPgo8L3A+CgoK5oqK6aOe5Lmm576k6IGK5o6l5YiwIEFJIGFnZW50IOW8leaTjueahOiHquaJmOeuoeacuuWZqOS6uuW5s+WPsOOAguavj+S4qumjnuS5puacuuWZqOS6uuiDjOWQjuaYr+S4gOS4quWujOaVtOeahCBhZ2VudCDlvJXmk47igJTigJRDbGF1ZGUgQ29kZe+8iGBAYW50aHJvcGljLWFpL2NsYXVkZS1hZ2VudC1zZGtgIC8gQ2xhdWRlIENvZGUgQ0xJ77yJ77yM5oiW5oyH5ZCRIERlZXBTZWVrIC8gTWluaU1heCDlrpjmlrkgQW50aHJvcGljIOWFvOWuueerr+eCueeahOWQjOS4gOi/kOihjOaXtuKAlOKAlOWcqOWQhOiHqueLrOeri+eahOW3peS9nOebruW9lemHjOaLpeacieWujOaVtOeahOW3peWFt+adg+mZkO+8muivu+WGmeaWh+S7tuOAgei3keWRveS7pOOAgeiwgyBBUEnjgIHmlLblj5HogYrlpKnpmYTku7bjgILkvaDlnKjnvqTph4wgQOacuuWZqOS6uuivtOS4gOWPpeivne+8jOWug+WwseWcqOS9oOiHquW3seeahCBNYWMg5LiK5pu/5L2g5bmy5rS777yM5bm25oqK6L+H56iL5LiO5Lqn54mp5Lul5Y2h54mH5b2i5byP5a6e5pe25Zue6LS05Yiw576k6YeM44CCCgo+IOacrOmhueebruWfuuS6jiBbTWV0YUJvdF0oaHR0cHM6Ly94dmlyb2JvdGljcy5jb20vbWV0YWJvdC8pIOaehOW7uu+8iOingeaWh+acq1voh7TosKLkuI7mnaXmupBdKCPoh7TosKLkuI7mnaXmupAp77yJ44CCCgojIyDnlYzpnaLkuIDop4gKCjx0YWJsZT4KICA8dHI+CiAgICA8dGQgd2lkdGg9IjM0JSIgYWxpZ249ImNlbnRlciI+PGI+6aOe5Lmm56uvPC9iPuKAlOKAlOe+pOmHjCBAYm90IOS4gOWPpeivnea0vua0uzwvdGQ+CiAgICA8dGQgd2lkdGg9IjY2JSIgYWxpZ249ImNlbnRlciI+PGI+V2ViIOeuoeeQhuWPsDwvYj7igJTigJQ8Y29kZT5sb2NhbGhvc3Q6OTEwMC9hZG1pbjwvY29kZT48L3RkPgogIDwvdHI+CiAgPHRyPgogICAgPHRkIHZhbGlnbj0idG9wIj48aW1nIHNyYz0iZG9jcy9pbWFnZXMvZmVpc2h1LWNoYXQuanBnIiBhbHQ9IumjnuS5puerr++8mkBib3Qg55Sf5Zu+77yMQ29tcGxldGUg5Y2h54mH5bim5LiK5LiL5paHL+i0ueeUqC/mqKHlnovpobXohJrvvIzkuqfniannm7TmjqXlm57nvqQiPjwvdGQ+CiAgICA8dGQgdmFsaWduPSJ0b3AiPjxpbWcgc3JjPSJkb2NzL2ltYWdlcy9hZG1pbi1jb25zb2xlLmpwZyIgYWx0PSLnrqHnkIblj7Dns7vnu5/mgLvop4jvvJrns7vnu5/nirbmgIHmnaHjgIHku4rml6Xku7vliqEgLyDmioDog73osIPnlKggLyDorrDlv4bmsonmt4AgLyDlrprml7bku7vliqHljaHniYfjgIHlvoXlpITnkIbjgIHlrp7ml7bliqjmgIHjgIHmnLrlmajkurrliJfooagiPjwvdGQ+CiAgPC90cj4KPC90YWJsZT4KCuW3pu+8mkDmnLrlmajkurror7TjgIzlgZrkuIDlvKDllrXlkqrlm77jgI3vvIxib3Qg6LeR5a6M6LS05Ye6IENvbXBsZXRlIOWNoeeJh++8iOmhteiEmuaYr+ecn+WunueahOS4iuS4i+aWh+eUqOmHjyAvIOi0ueeUqCAvIOacjeW9ueaooeWei++8ie+8jOeUn+aIkOeahOWbvueJh+ebtOaOpeWPkei/m+e+pOOAguWPs++8mueuoeeQhuWPsOezu+e7n+aAu+iniOKAlOKAlOmhtumDqOS4gOihjOezu+e7n+eKtuaAge+8jOWbm+W8oOWNoeeJh+eci+S7iuaXpeS7u+WKoe+8iOaIkOWRmOWPkei1tyAvIOWumuaXtu+8ieOAgei/kSA3IOWkqeaKgOiDveiwg+eUqOOAgeiusOW/huayiea3gOS4juWumuaXtuS7u+WKoe+8m+OAjOW+heWkhOeQhuOAjeaxh+aAu+mcgOimgeWkhOeQhueahOS6i++8jOOAjOWunuaXtuWKqOaAgeOAjeaYr+acgOi/keeahOS7u+WKoea1ge+8jOS4i+aWueavj+S4qiBib3Qg55qE54q25oCB44CB5Lu75Yqh44CB5oqA6IO96LCD55So5LiO6K6w5b+G56ev57Sv77yIYm90IOWQjeW3suaJk+egge+8ieOAggoKIyMg6aG555uu55uu5qCHCgotICoq5oqKIGFnZW50IOS7jue7iOerr+aQrOi/m+WboumYn+aXpeW4uOayn+mAmueahOWcsOaWueOAgioqIENsYXVkZSBDb2RlIOi/meexuyBhZ2VudCDlvojlvLrvvIzkvYblhaXlj6PmmK/mnKzmnLrnu4jnq6/jgIHkuIDkurrkuIDkvJror53jgIJMdWNrYWdlbnQg6K6p5a6D5Lul6aOe5Lmm5py65Zmo5Lq655qE6Lqr5Lu9IDfDlzI0IOW4uOmpu++8muWboumYn+S7u+S9leS6uuWcqOe+pOmHjCBA5a6DIOWwseiDvea0vua0u++8jOS6p+eJqe+8iFBQVOOAgeihqOagvOOAgeaWh+aho+OAgeWbvueJh+OAgeinhumikeOAgeS7o+eggeOAgeivremfs++8ieebtOaOpeWbnuWIsOe+pOmHjOOAggotICoq5a6M5YWo6Ieq5omY566h44CB5pWw5o2u5LiN5Ye66Ieq5bex5py65Zmo44CCKiog6LeR5Zyo5L2g55qEIE1hYyBtaW5pIC8gTWFjQm9vayDkuIrvvJrpo57kuablh63or4HjgIHogYrlpKnorrDlvZXjgIHlt6XkvZzmlofku7bjgIFBUEkga2V5IOmDveeVmeWcqOacrOacuu+8m+WvueWkluWPquacieWIsOmjnuS5puW8gOaUvuW5s+WPsOeahCB3ZWJzb2NrZXQg6ZW/6L+e5o6l5ZKM5L2g6YCJ5oup55qE5qih5Z6LIEFQSeOAguS4pOS4quacjeWKoeerr+WPo+m7mOiupOWPque7kSBgMTI3LjAuMC4xYOOAggotICoq5aSaIGJvdOOAgeWkmuW8leaTjuOAgeS4gOS7vemFjee9ruOAgioqIOS4gOWPsOacuuWZqOi3keS7u+aEj+WkmuS4quacuuWZqOS6uu+8jOavj+S4qiBib3Qg54us56uL55qE6aOe5Lmm5bqU55So44CB5bel5L2c55uu5b2V44CB5byV5pOO77yIQ2xhdWRlIC8gRGVlcFNlZWsgLyBNaW5pTWF477yJ5LiO6aKE566X6ZmQ6aKd77yM6YCC5ZCI44CM5LiA5Liq6aG555uu5LiA5LiqIGJvdCDlkIzkuovjgI3nmoTnlKjms5XjgIIKLSAqKueUn+S6p+WPr+mdoOS8mOWFiOOAgioqIOacrOmhueebrua6kOiHquS4gOWll+WcqOecn+WunuWboumYn+mHjOi/nue7rei/kOihjOaVsOaciOeahOmjnuS5piBib3Qg6ZuG576k77yM5raI5oGv5ZCI5bm244CB6ZmE5Lu25pS25Y+R44CB5Y+R6YCB55uu5b2V5riF55CG44CB5byV55So5LiK5LiL5paH5rOo5YWl44CB56m66Zey5Lya6K+d6Ieq5Yqo5o2i5paw44CB6K6w5b+G5bqT5Ye656uZ6Ze46Zeo562JIDE4IOmhueihjOS4uuWinuW8uumDveaYr+WunumZhei4qeWdkeWQjueahOayiea3gO+8iOingVvorr7orqHnrJTorrBdKGRvY3MvZGVzaWduLW5vdGVzLm1kKe+8ie+8jOW5tumFjeacieS4iuWNg+adoeiHquWKqOWMlua1i+ivle+8jOavj+asoeaPkOS6pOmDveWcqCBDSSDkuIrot5Hlhajph4/jgIIKCiMjIOecn+WunuWboumYn+mHjO+8jGJvdCDmr4/lpKnlnKjlgZrku4DkuYgKCuS4i+mdouaYr+S4gOS4quecn+WunuWboumYn++8iDE4IOS4qumhueebriBib3TvvIzkuIDlkajov5HljYPkuKrku7vliqHvvInph4zmnIDluLjop4HnmoTkupTnsbvnlKjms5XvvIzlrqLmiLfjgIHlk4HniYzkuI7kurrlkI3lnYflt7LpmpDljrvvvJoKCnwg5Zy65pmvIHwg576k6YeM6L+Z5qC36K+077yI56S65L6L77yJIHwgYm90IOS6pOS7mOS7gOS5iCB8CnwgLS0tIHwgLS0tIHwgLS0tIHwKfCAqKuiQpemUgOinhuinieS4jueUteWVhuWbvioqIHwg44CM5oyJ56ys5LiA5byg5Zu+55qE6aOO5qC877yM5oqK5ZCO6Z2i5Yeg5byg56S855uS5Zu+5YGa5oiQ5LiA5aWX5Zy65pmv5Zu+77yM56S855uS5LiK55qE5a2X5Yir5Yqo44CN4oaS44CM5oqK6Iqx5Y675o6J44CN44CM6LCD5oiQ5omL5py65a6e5ouN5oSf44CNIHwg5LiA5aWX6aOO5qC857uf5LiA55qE5Zy65pmv5Zu+77yM5Lqn5ZOB5aSW6KeC5LiO5YyF6KOF5paH5a2X5L+d5oyB5LiN5Y+Y77yb576k6YeM5LiA5Y+l6K+d5LiA6L2u77yM6YCQ5q2l5b6u6LCD5Yiw5a6a56i/IHwKfCAqKuaWueahiOS4juaPkOahiCoqIHwg44CM5qC55o2u5Lya6K6u57qq6KaB5ZKM5oiR55qEIGZsb3fvvIzlh7ogNeKAkzYg6aG1IHNvY2lhbCBwbGFu44CN44CM5oyJ5a6i5oi35om55rOo5pS55LiA54mIIFYyIOinhumikeahhuaetu+8jOWPpuWtmOaWsOmTvuaOpe+8jOaUueWKqOWkhOmrmOS6ruOAjSB8IOWPr+e8lui+keeahCBQUFTjgIHpo57kuabmlofmoaPvvJvmlLnnqL/kv53nlZnml6fniYjjgIHmoIflh7rmlLnliqjvvIzmlrnkvr/otJ/otKPkurrlv6vpgJ/lpI3moLggfAp8ICoq5pWw5o2u5ZGo5oql5LiO6K+K5patKiogfCDjgIzloavmnKzlkajnp4Hln5/lkajmlbDmja7vvIzljrvmjonmn5DmuKDpgZPnmoTmlbDmja7vvIzliJflh7rmnInlj43ppojnmoTnlKjmiLfjgI3jgIzov5nlpKnnmoTpppblm57lubPlnYfml7bplb/kuLrku4DkuYjmmK8gNDYg5YiG6ZKf77yf44CNIHwg6aOe5Lmm5LqR6KGo5qC85LiO5aSa57u06KGo5qC877yM6ZmE5pWw5o2u5Y+j5b6E6K+05piO5ZKM57uT6K6677yb5byC5bi45YC85Lya6L+95Yiw5Y6f5aeL6K6w5b2V5om+5Y6f5ZugIHwKfCAqKuaWh+ahiOS4juayn+mAmioqIHwg44CM5YaZ5LiA54mI5Lit56eL5Zu95bqG55qE56S+576k5YWz5oCA5paH5qGI44CN44CM5oqK57uZ5a6i5oi355qE5Y+N6aaI5pS55b6X5aeU5amJ5YW35L2T77yM5Yir55So5Li76KeC5om55Yik55qE6K+N44CNIHwg6IqC5pel5paH5qGI44CB55u05pKt5Liy6K+N44CB5L+D6ZSA55+t5Y+l44CB5a+55aSW5rKf6YCa56i/77yM5oyJ5oyH5a6a6LCD5oCn5LiA5qyh57uZ5Ye65aSa5Liq5aSH6YCJIHwKfCAqKuWumuaXtuiHquWKqOWMlioqIHwg5q+P5aSp5pep5LiK6Ieq5Yqo6LeR77ya576k6IGK5oC757uT44CB6KGM5Lia5paw6Ze7566A5oql44CB5ZCI5ZCM5beh5qOA5LiO5pyI5bqm5pS25YWl56Gu6K6k44CB5Lq65LqL5YWz6ZSu6IqC54K55o+Q6YaS44CB5pyN5Yqh5Yiw5pyf6aKE6K2mIHwg5peg6ZyA5Lq65Y+r77ya5a6a5pe26K+75YaZ5aSa57u06KGo5qC8IC8g5LqR5paH5qGj77yM57uT5p6c5Y+R5Zue5a+55bqU55qE576k77yb5raJ5Y+K6YeR6aKd562J5pWP5oSf5pWw5o2u5Y+q55WZ5pys5ZywIHwKCui/meS6m+S6p+WHuumDveebtOaOpeWbnuWIsOe+pOmHjO+8jOWboumYn+eahOavj+S4gOasoee6oOWBj++8iOOAjOWtl+S9k+S4jeWvueOAjeOAjOagvOW8j+aMieS4iuaciOeahOS/neaMgeOAje+8iemDveS8muayiea3gOi/myBib3Qg55qE6K6w5b+G77yM6ZyA6KaB6LeoIGJvdCDlhbHnlKjnmoTlho3lrZjov5vlhbHkuqvnn6Xor4blupPigJTigJTkuIvmrKHkuI3nlKjlho3or7TkuIDpgY3vvIzov5nmraPmmK/jgIzog73lipvmsonmt4DjgI3nmoTmnaXmupDjgIIKCiMjIOaetuaehAoK5Lik5Liq5bi46am76L+b56iL77yM55SxIFBNMiDnrqHnkIbvvJoKCmBgYAogICAgICAgICAgICAgICAgICAgICAgIOKUjOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUkAogIOmjnuS5puW8gOaUvuW5s+WPsCAgICAgICAgICDilIIgIGx1Y2thZ2VudC1icmlkZ2UgICAgICAgICAgKDEyNy4wLjAuMTo5MTAwKSAg4pSCCiAg4pSM4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSQICDplb/ov57mjqUgIOKUgiAg4pSM4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSQICAg4pSM4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSQICDilIIKICDilIIg6aOe5Lmm5bqU55SoIEEg4pSC4peE4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pa64pSCICDilIIgQm90IEEg5qGl5o6lICDilILilIDilIDilrrilIIg5byV5pOOOiBDbGF1ZGUgQ29kZSAgICAg4pSCICDilIIKICDilIIg6aOe5Lmm5bqU55SoIEIg4pSC4peE4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pa64pSCICDilIIgQm90IEIg5qGl5o6lICDilILilIDilIDilrrilIIgIC8gRGVlcFNlZWsgLyBNaW5pTWF4IOKUgiAg4pSCCiAg4pSCICAgLi4uICAgIOKUgiB3ZWJzb2NrZXTilIIgIOKUgiAgIC4uLiAgICAgIOKUgiAgIOKUgiAo5q+PIGJvdCDni6znq4vlt6XkvZznm67lvZUpICAg4pSCICDilIIKICDilJTilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilJggICAgICAgICAg4pSCICDilJTilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilJggICDilJTilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilJggIOKUggogICAgICAgICAgICAgICAgICAgICAgICDilIIgIEhUVFAgQVBJIChCZWFyZXIpICArICBXZWIg566h55CG5Y+wIC9hZG1pbiAgICAgIOKUggogICAgICAgICAgICAgICAgICAgICAgICDilJTilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilKzilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilJgKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg4pSCCiAgICAgICAgbHVja2FnZW50IENMSSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilKQgOjkxMDAgIChib3RzL3RhbGsvc2NoZWR1bGUv4oCmKQogICAgICAgICh+Ly5sb2NhbC9iaW4pICAgICAgICAgICAgICAgICDilIIKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg4pa8CiAgICAgICAgICAgICAgICAgICAgICAgIOKUjOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUkAogICAgICAgICAgICAgICAgICAgICAgICDilIIgIGx1Y2thZ2VudC1jb3JlICAgICAgICAgICAgKDEyNy4wLjAuMTo5MjAwKSAg4pSCCiAgICAgICAgICAgICAgICAgICAgICAgIOKUgiAg5YWx5Lqr6K6w5b+GIC8g5oqA6IO95Lit5b+DIC8gQWdlbnQg5oC757q/IC8g5pS25Lu2566xICAgICDilIIKICAgICAgICAgICAgICAgICAgICAgICAg4pSCICBTUUxpdGU6IH4vLmx1Y2thZ2VudC1jb3JlL2RhdGEvY2VudHJhbC5kYiAgIOKUggogICAgICAgICAgICAgICAgICAgICAgICDilJTilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilJgKYGBgCgotICoqbHVja2FnZW50LWJyaWRnZSoq77ya6YCa6L+HIHdlYnNvY2tldCDplb/ov57mjqXmjqXlhaXmr4/kuKrphY3nva7nmoTpo57kuablupTnlKjvvIzpqbHliqggYWdlbnQg5byV5pOO6LeR5Lu75Yqh77yM5ZCM5pe25pq06ZyyIEhUVFAgQVBJ77yIYEFQSV9TRUNSRVRgIEJlYXJlciDpibTmnYPvvInlubbmiZjnrqEgV2ViIOeuoeeQhuWPsCBgaHR0cDovL2xvY2FsaG9zdDo5MTAwL2FkbWluYOOAggotICoqbHVja2FnZW50LWNvcmUqKu+8muS4reWkruWtmOWCqOacjeWKoeKAlOKAlOi3qCBib3Qg5YWx5Lqr6K6w5b+G44CB5oqA6IO95rOo5YaM5Lit5b+D44CBYWdlbnQg5Zyw5Z2A57C/5LiOIENMSSDmlLbku7bnrrHvvIx0b2tlbiDnlLEgYGNlbnRyYWwtYWRtaW5gIOetvuWPkeOAggotICoqbHVja2FnZW50IENMSSoq77ya5Y2V5LiA5ZG95Luk6KGM5YWl5Y+j77yM6KaG55uW6L+b56iL566h55CG44CBYnJpZGdlIEFQSSDkuI4gY29yZSDlip/og73kuInnsbvlkb3ku6TjgIIKCuS4pOS4querr+WPo+m7mOiupOmDveWPque7kSBgMTI3LjAuMC4xYO+8jOS4jemineWklumFjee9ruS4jeS8muaatOmcsuWIsOe9kee7nOOAggoKIyMjIOS4gOadoea2iOaBr+eahOeUn+WRveWRqOacnwoKMS4gKirmjqXmlLYqKu+8mumjnuS5puS6i+S7tue7jyB3ZWJzb2NrZXQg6ZW/6L+e5o6l5o6o5YiwIGJyaWRnZe+8iOaXoOmcgOWFrOe9keWbnuiwg+WcsOWdgO+8ie+8m+W/q+mAn+i/nuWPkeeahOWkmuadoea2iOaBr+S8muiHquWKqOWQiOW5tuaIkOS4gOi9ruOAgkBib3Qg6Kem5Y+R5pe25oyJ6aOe5Lmm5o6l5Y+j5ouJ5Y+W6L+Z5Liq5Lq65LiK5LiA5qyhIEAg5LmL5ZCO5Y+R55qE5p2Q5paZ77yI5paH5pys44CB6ZO+5o6l44CB5Zu+54mH44CB5paH5Lu277yJ5LiA5bm25bim5LiK77yM5pSv5oyB44CM5YWI5Y+R5p2Q5paZ44CB5pyA5ZCOIEDjgI3nmoTnlKjms5XvvJvmlq3ov57ph43ov57lkI7kvJrooaXmiavnm7LljLrmtojmga/jgIIKMi4gKirkvJror50qKu+8muavj+S4quiBiuWkqe+8iOe+pC/np4HogYrvvInlr7nlupTkuIDkuKrmjIHnu63nmoQgYWdlbnQg5Lya6K+d4oCU4oCU5ZCE5byV5pOO6buY6K6k6LWwKirmjIHkuYXmiafooYzlmajmsaAqKu+8iOmVv+mpu+i/m+eoi++8jOaUr+aMgSBBZ2VudCBUZWFtc+OAgWAvZ29hbGAg5aSa6L2u6Ieq5Yqo5o6o6L+b44CB5ZCO5Y+w5Lu75Yqh77yJ77yM5YW25L2Z5byV5pOO6YCQ5Zue5ZCI5ouJ6LW344CC5Lya6K+d56m66ZeyIDMg5bCP5pe25Lul5LiK5LiU57uP5Y6G6L+H5LiK5LiL5paH5Y6L57yp5pe26Ieq5Yqo5byA5paw5Lya6K+d77yM5bm25oqK5pen5Lya6K+d5pyA6L+R55qE5Lqk5o6l5pGY6KaB5rOo5YWl6aaW5p2h5o+Q56S66K+N77yM6YG/5YWN5Lya6K+d5paH5Lu25peg6ZmQ6Iao6IOA44CB5Y6L57yp6ZqP5py656C45Zyo5Lu75Yqh5Lit6Ze044CCCjMuICoq5omn6KGMKirvvJrlvJXmk47lnKjor6UgYm90IOeahOeLrOeri+W3peS9nOebruW9le+8iOm7mOiupCBgfi9wcm9qZWN0cy88Ym905ZCNPmDvvIzmoLnnm67lvZXlronoo4Xml7blj6/mlLnvvInph4zlhajlt6Xlhbfov5DooYzvvJvogYrlpKnph4zlj5HnmoTmlofku7boh6rliqjkuIvovb3liLAgYGlucHV0cy9gIOS+myBhZ2VudCDnm7TmjqXkvb/nlKjjgILoo4XmnLrljbPlpIflpb3lip7lhazkuI7lqpLkvZPlt6Xlhbfpk77vvIhweXRob24tcHB0eCAvIG9wZW5weXhsIC8gUGlsbG93IOetiSBQeXRob24g5Z+656GA5YyF44CBTGlicmVPZmZpY2XjgIFmZm1wZWfjgIFwb3BwbGVy44CBTm90byBDSksg5a2X5L2T77yJ77yM5YGaIFBQVOOAgeihqOagvOOAgeaWh+aho+OAgVBERuOAgeWbvueJh+OAgeivremfs+S4jeeUqOS4tOaXtuijheeOr+Wig+OAggo0LiAqKuWbnui0tCoq77ya6L+H56iL5rWB5byP5pu05paw5Yiw6aOe5Lmm5Y2h54mH77ybYWdlbnQg5pS+6L+b5Y+R6YCB5pqC5a2Y55uu5b2V55qE5Lqn54mpKirlj5Hov4fljbPliKAqKu+8jOWbnuWQiOe7k+adn+WGjeihpeaJq+S4gOasoemYsua8j+WPke+8iOW9kuaho+WPpuWtmCBgb3V0cHV0cy9g77yJ44CCCjUuICoq566h5o6nKirvvJrpooTnrpfpmZDpop3jgIHlubblj5HkuIrpmZDjgIHnvqTogYrnmb3lkI3ljZXjgIHnp4HogYrmmK/lkKbkuZ/pnIAgQOOAgWAvbW9kZWxgIOS8muivneWGheWIh+W8leaTjuetiemDveaMiSBib3Qg6YWN572u77yb5YWo5py66buY6K6k5byV5pOOIC8g5qih5Z6LIC8g55Sf5Zu+5ZCO56uv5Zyo566h55CG5Y+w44CM57O757uf6YWN572u44CN6YeM5pS577yb5YWo56iL6K6w6LSm5Y+v5Zyo566h55CG5Y+w5LiOIGBsdWNrYWdlbnQgc3RhdHNgIOafpeeci+OAguWbnuWQiOWboOaVhei1t+S4jeadpe+8iOavlOWmguaJp+ihjOWZqOaLiei1t+Wksei0pe+8ieaXtu+8jOWNoeeJh+S8muaUtuaIkOmUmeivr+aAgeW5tuWGmeaYjuWOn+WboO+8jOS4jeS8muS4gOebtOi9rOWciOOAggoKIyMg54m55oCnCgotICoq5aSaIGJvdCDljZXov5vnqIsqKu+8muS4gOS7vSBgYm90cy5qc29uYCDphY3ku7vmhI/lpJrkuKrpo57kuabmnLrlmajkurrvvIzlkIToh6rni6znq4vnmoTlupTnlKjlh63or4HjgIHlt6XkvZznm67lvZXjgIHlvJXmk47kuI7pooTnrpfpmZDpop3jgIIKLSAqKuWkmuW8leaTjuWPr+mAiSoq77ya5q+P5LiqIGJvdCDnlKggYGVuZ2luZTogImNsYXVkZSIgfCAiZGVlcHNlZWsiIHwgIm1pbmltYXgiYCDpgInmi6nlkI7nq6/vvJtDbGF1ZGUg5pSv5oyBIEFQSSBrZXkg5oiW6K6i6ZiF55m75b2V77yMRGVlcFNlZWsgLyBNaW5pTWF4IOi1sOWQhOWutuWumOaWuSBBbnRocm9waWMg5YW85a6556uv54K544CB5Y+q6KaBIGtleSDpm7blronoo4XvvIjlnYfmlK/mjIHnnIvlm77vvInjgILmiYDmnInlvJXmk47lhbHkuqvlkIzkuIAgQ2xhdWRlIENvZGUg6L+Q6KGM5pe24oCU4oCU5oyB5LmF5Lya6K+d44CBQWdlbnQgVGVhbXPjgIHorrDlv4bkvZPns7vlrozlhajkuIDoh7TjgILlhajmnLrpu5jorqTlvJXmk47kuI7lkITlvJXmk47pu5jorqTmqKHlnovlj6/lnKjnrqHnkIblj7Dnm7TmjqXmlLnvvIzljZXkuKogYm90IOS7jeWPr+WNleeLrOimhuebluOAggotICoqV2ViIOeuoeeQhuWPsCoq77ya57O757uf5oC76KeI77yI6L+Q6KGM54q25oCB44CB5b6F5aSE55CG5LqL6aG544CB5a6e5pe25Yqo5oCB44CB5oqA6IO95LiO6K6w5b+G55qE5rS76LeD5oOF5Ya177yJ44CB5py65Zmo5Lq6566h55CG77yI5ZCr5omL5oqK5omL55qE6aOe5Lmm5o6l5YWl5ZCR5a+877yM5YiX6KGo5pi+56S65q+P5LiqIGJvdCDlrp7pmYXnlJ/mlYjnmoTmqKHlnovvvInjgIHlrprml7bku7vliqHvvIjmjInnsbvlnosgLyBib3QgLyDnirbmgIHnrZvpgInvvIzlj6/nnIvlrozmlbTmj5DnpLror43vvInjgIHnvqTml6XmiqXvvIjmiYDmnIkgYm90IOeahOe+pOS4gOW8oOihqO+8ieOAgeaKgOiDve+8iOmhueebruaKgOiDveeahOS9v+eUqOe7n+iuoe+8ieOAgeiusOW/hu+8iOWFqCBib3Qg5oC76KeI44CB57Si5byV5Y2g55So6aKE6K2m44CB5YWo5paH5pCc57Si77yJ44CB6L+Q6KGM5pel5b+X44CB57O757uf6YWN572u77yI6buY6K6k5byV5pOOIC8g5qih5Z6LIC8g55Sf5Zu+5ZCO56uv5Y+v57yW6L6R77yM5L+d5a2Y5ZCO56Gu6K6k5Y2z6YeN5ZCv55Sf5pWI77yJ77yM5rWP6KeI5Zmo6YeM5a6M5oiQ5LuO5bu65bqU55So5Yiw6LeR6YCa55qE5YWo5rWB56iL44CCCi0gKirlrprml7bku7vliqHkuI7nvqTml6XmiqUqKu+8muS4gOasoeaAp+W7tui/n+S4jiBjcm9uIOWRqOacn+S7u+WKoe+8jENMSSAvIOeuoeeQhuWPsCAvIEhUVFAgQVBJIOS4ieenjeWFpeWPo++8jOaMgeS5heWMluOAgemHjeWQr+iHquWKqOaBouWkje+8m+e+pOaXpeaKpeaMiee+pOWQjeS4gOmUruW8gOWFs++8jOm7mOiupOavj+WkqeaXqSA3IOeCueaAu+e7k+aYqOWkqeWFqOWkqeOAggotICoq55Sf5Lqn56Oo5Ye65p2l55qE56iz5a6a5oCnKirvvIjor6bop4EgW+iuvuiuoeeslOiusF0oZG9jcy9kZXNpZ24tbm90ZXMubWQp77yJ77ya5paH5Lu25LiK5Lyg6LaF5pe26YeN6K+V44CB5b+r6YCf6L+e5Y+R5raI5oGv5ZCI5bm244CB576k6IGK5byV55So5Zue5aSN57K+56Gu6YCa55+l44CB6KKr5byV5raI5oGv5LiK5LiL5paH5rOo5YWl44CBQCDml7bmjInmjqXlj6Pmi4nmnKzova7mnZDmlpnjgIHnqbrpl7LkvJror53oh6rliqjmjaLmlrDlubbkuqTmjqXjgIHlh7rnq5nlhoXlrrnohLHmlY/jgIHorrDlv4blupPlh7rnq5npl7jpl6jjgIHlj5HpgIHnm67lvZXjgIzlj5Hov4fljbPliKAgKyDmvI/lj5HooaXmiavjgI3jgIHotoXlpKfpmYTku7bliIbniYfkuIvovb3jgIHplb/ov57mjqXmlq3ov57ooaXmiavjgIHlj5HpgIHlpLHotKXmmI7noa7lkYrnn6XnrYnvvIzlhajpg6jlhoXlu7rjgIIKLSAqKui3qCBib3Qg5Y2P5L2cKirvvJrlhbHkuqvorrDlv4bmsonmt4Dnn6Xor4bjgIHmioDog73kuK3lv4PlpI3nlKjmlrnms5XjgIFhZ2VudCDmgLvnur/orqkgYm90IOS5i+mXtOS6kuebuOWnlOaJmOS7u+WKoe+8jOS5n+aUr+aMgei3qOS4u+acuiBwZWVycyDogZTpgqbjgIIKLSAqKuWKnuWFrOS4juWqkuS9k+W3peWFt+mTvioq77ya5a6J6KOF6ISa5pys5LiA5qyh6KOF6b2QIGJvdCDkuqflh7rmiYDpnIDnmoQgUHl0aG9uIOWfuuehgOWMhe+8iHB5dGhvbi1wcHR4IC8gb3BlbnB5eGwgLyBQaWxsb3cgLyBwYW5kYXMgLyBQeU11UERGIOetie+8jOeLrOeriyB2ZW52IOS4jeeisOezu+e7nyBQeXRob27vvInjgIFMaWJyZU9mZmljZeOAgWZmbXBlZ+OAgXBvcHBsZXIg5LiOIE5vdG8gQ0pLIOWtl+S9k++8m2BsdWNrYWdlbnQgZG9jdG9yYCDlj6/mo4Dmn6XmmK/lkKbpvZDlhajjgIIKLSAqKueUn+WbvuS4juinhumikSoq77ya55Sf5Zu+5pyJIENoYXRHUFQg6K6i6ZiF5bCx6LWw5pys5py6IENvZGV4IENMSSDlhoXnva7nmoTnlJ/lm77vvIjkuI3pnIDopoEgQVBJIGtlee+8ie+8jOayoeacieiuoumYheeUqOeBq+WxsSBTZWVkcmVhbe+8jENvZGV4IOacqueZu+W9leaIluaSnuiuoumYhemineW6puaXtuiHquWKqOaUueeUqCBTZWVkcmVhbe+8m+inhumikeeUqOeBq+WxsSBTZWVkYW5jZe+8iOaWh+eUn+inhumikeOAgemmluW4p+WbvueUn+inhumikeOAgeWPguiAg+WbviAvIOinhumikSAvIOmfs+mike+8ie+8jOS4jiBTZWVkcmVhbSDlhbHnlKjkuIDmiorngavlsbHmlrnoiJ8ga2V544CC55So576k6YeM5Y+R5p2l55qE6KeG6aKRIC8g6Z+z6aKR5b2T5Y+C6ICD57Sg5p2Q5pe26ZyA6KaB5Y+v6YCJ55qE54Gr5bGxIFRPU++8jOe0oOadkOeUqOWujOiHquWKqOWIoOmZpOOAguWuieijheiEmuacrOS8muS7o+ijhSBDb2RleCDlubblvJXlr7znmbvlvZXjgIHor6Lpl67ngavlsbEga2V577yM5LmL5ZCO5Zyo566h55CG5Y+w6ZqP5pe25YiH5o2i5oiW6KGl5aGr44CCCi0gKirnvZHnq5noh6rliqjljJYqKu+8muWuieijheaXtum7mOiupOijheWlvSBvcGVuY2xp77yMYm90IOiDveaKk+WPluOAgeaQnOe0oiAxNTUrIOS4que9keerme+8iOekvuWqkuOAgeeUteWVhuOAgei1hOiur+etie+8ie+8jOW5tumpseWKqOacrOacuuW3sueZu+W9leeahCBDaHJvbWUg5pON5L2c572R6aG144CCCi0gKiror63pn7MqKu+8muaWh+acrOi9rOivremfs++8iOixhuWMhSAvIE9wZW5BSSAvIEVsZXZlbkxhYnMgLyBFZGdlIFRUU++8ie+8jOWPr+mFjee9ruivremfs+WbnuWkjeOAggoKIyMg57O757uf6KaB5rGCCgotICoqbWFjT1MqKu+8iOebruagh+acuuWeiyBNYWMgbWluaSAvIE1hY0Jvb2vvvIxBcHBsZSBTaWxpY29u77yJ77yb5a6J6KOF6ISa5pys5Lya6Ieq5Yqo6KGl6b2QIEhvbWVicmV344CBbm9kZSAyMuOAgVBNMuOAgWxhcmstY2xp77yM5Lul5Y+K5Yqe5YWs5LiO5aqS5L2T5bel5YW36ZO+77yIZmZtcGVnIC8gTGlicmVPZmZpY2UgLyBwb3BwbGVyIC8gTm90byBDSksg5a2X5L2TIC8gUHl0aG9uIOWfuuehgOWMhe+8iQotICoq6IO96K6/6Zeu5rW35aSW5rqQ55qE572R57ucKirvvJrlronoo4XopoHku44gR2l0SHVi44CBSG9tZWJyZXfjgIFucG3jgIFQeVBJIOS4i+i9ve+8jOWbveWGhee9kee7nOivt+W8gOair+WtkOW5tuWIh+WIsCoq6Jma5ouf572R5Y2h77yIVFVO77yJ5qih5byPKirvvIjmjqjojZAgQ2xhc2ggVmVyZ2XvvInigJTigJTmma7pgJrjgIzns7vnu5/ku6PnkIbjgI3mqKHlvI/lr7nnu4jnq6/ph4znmoTkuIvovb3kuI3nlJ/mlYjjgILlronoo4XohJrmnKzlvIDlpLTkvJrlhYjmtYvkuIDpgY3vvIzmnInpl67popjkvJrlgZzkuIvmnaXmj5DnpLoKLSDkuIDkuKoqKumjnuS5puS8geS4muiHquW7uuW6lOeUqCoq77yI5a6J6KOF5ZCO566h55CG5Y+w55qE44CM5o6l5YWl5ZCR5a+844CN5Lya5omL5oqK5omL5bim5L2g5Yib5bu677yM5oiW5YWI55yLW+mFjee9ruaMh+WNl10oZG9jcy9mZWlzaHUtYXBwLXNldHVwLm1kKe+8iQotIOiHs+WwkeS4gOenjSoq5byV5pOO6K6k6K+BKirvvJpDbGF1ZGUg6K6i6ZiF55m75b2V5oiWIGBBTlRIUk9QSUNfQVBJX0tFWWDvvJvmiJYgRGVlcFNlZWsgLyBNaW5pTWF4IOeahCBBUEkga2V577yIYERFRVBTRUVLX0FQSV9LRVlgIC8gYE1JTklNQVhfQVBJX0tFWWDvvIzpm7YgQ0xJIOWuieijhe+8ieOAguivpuingVvlvJXmk47phY3nva5dKGRvY3MvZW5naW5lcy5tZCkKLSDnvZHnq5noh6rliqjljJbvvIjlj6/pgInvvInvvJpHb29nbGUgQ2hyb21l77yM5bm255m75b2VIGJvdCDopoHorr/pl67nmoTnvZHnq5nvvIhvcGVuY2xpIOeUseWuieijheiEmuacrOS7o+ijhe+8iQotIOeUn+WbviAvIOinhumike+8iOWPr+mAie+8ie+8mueUn+WbvueUqCBDaGF0R1BUIOiuoumYhe+8iOi1sCBDb2RleCBDTEnvvIzlronoo4XohJrmnKzku6Poo4XvvInmiJbngavlsbHmlrnoiJ8gYEFSS19BUElfS0VZYO+8m+inhumikemcgOimgeeBq+WxseaWueiInyBgQVJLX0FQSV9LRVlg77yb5Y+C6ICD5pys5Zyw6KeG6aKRIC8g6Z+z6aKR5YaN5Yqg54Gr5bGxIFRPUwoKIyMg5a6J6KOFCgrkuKTnp43mlrnlvI/vvIzoo4XlrozmlYjmnpznm7jlkIzvvIjmjqjojZDmlrnlvI8gQe+8ie+8mgoKKirmlrnlvI8gQSDCtyDkuIDooYzlkb3ku6TvvIjmjqjojZDvvIzpm7bliY3nva7kvp3otZbvvIkqKgoKYGBgYmFzaApjdXJsIC1mc1NMIGh0dHBzOi8vcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbS9oYW95YW4teWFtL2x1Y2thZ2VudC9tYWluL3NjcmlwdHMvZ2V0LnNoIHwgYmFzaApgYGAKCuWPqueUqCBtYWNPUyDoh6rluKbnmoQgY3VybC90YXIvYmFzaOKAlOKAlOWFqOaWsOacuuWZqO+8iOayoeaciSBOb2Rl44CB5rKh5pyJIGdpdO+8ieS5n+iDveebtOaOpei3keOAguiEmuacrOaKiuS7k+W6k+WPluWIsCBgfi9sdWNrYWdlbnRgIOWQjui9rOS6pOS6pOS6kuW8jyBpbnN0YWxsLnNo77yb6YeN5aSN5omn6KGM5a6J5YWo77yI5qOA5rWL5Yiw546w5pyJ5a6J6KOF5Lya57uZ5Y2H57qn5oyH5byV77yJ44CC5oOz5YWI55yL6ISa5pys5YaF5a6577yaW3NjcmlwdHMvZ2V0LnNoXShzY3JpcHRzL2dldC5zaCnjgILlj6/nlKggYExVQ0tBR0VOVF9ESVJgIC8gYExVQ0tBR0VOVF9ZRVM9MWAg562J546v5aKD5Y+Y6YeP5a6a5Yi277yM6KeB6ISa5pys5aS06YOo5rOo6YeK44CCCgo+IOacuuWZqOS4iuW3suaciSBOb2RlIOeahOivne+8jGBucHggbHVja2FnZW50IGluaXRgIOaViOaenOebuOWQjOOAggoKKirmlrnlvI8gQiDCtyBnaXQgY2xvbmUqKgoKYGBgYmFzaApnaXQgY2xvbmUgaHR0cHM6Ly9naXRodWIuY29tL2hhb3lhbi15YW0vbHVja2FnZW50LmdpdCB+L2x1Y2thZ2VudApjZCB+L2x1Y2thZ2VudCAmJiBiYXNoIGluc3RhbGwuc2gKYGBgCgpnaXQg5qOA5Ye65aSp54S25pSv5oyBIGBsdWNrYWdlbnQgdXBkYXRlYCDkuIDplK7ljYfnuqfjgIIKCuWuieijheW8gOWni+WJjeS8muWFiOWBmioq572R57uc5qOA5p+lKirvvJrmioogR2l0SHViIC8gSG9tZWJyZXcgLyBucG0gLyBQeVBJIC8gQ2xhdWRlIOi/meS6m+a6kOW5tuihjOa1i+S4gOmBjei/numAmuS4jumAn+W6pu+8jOi/nuS4jeS4iuaIluW+iOaFouaXtuWBnOS4i+adpe+8jOaPkOekuuW8gOair+WtkOeahCBUVU4g5qih5byP5ZCO5Zue6L2m6YeN5rWL77yI5Lmf5Y+v5Lul6YCJ5oup5b+955Wl57un57ut77yJ44CC5LmL5ZCO6ZqP5pe25Y+v5Lul55SoIGBsdWNrYWdlbnQgbmV0Y2hlY2tgIOWGjea1i+OAggoK5a6J6KOF6L+H56iL5Lit5Lya5L6d5qyh6K+i6Zeu77yaKirpu5jorqTlvJXmk47kuI7orqTor4EqKuOAgSoq55Sf5Zu+5LiO6KeG6aKRKirvvIjmnIkgQ2hhdEdQVCDorqLpmIXlsLHku6Poo4UgQ29kZXgg5bm255m75b2V77yb54Gr5bGx5pa56IifIGtleSDnlKjkuo7op4bpopHlkowgU2VlZHJlYW0g55Sf5Zu+77yb5Y+v6YCJ6YWNIFRPU++8ieOAgSoqYm90IOW3peS9nOWMuuagueebruW9lSoq77yI6buY6K6kIGB+L3Byb2plY3RzYO+8ieOAgumDveWPr+S7peebtOaOpeWbnui9pueUqOm7mOiupOWAvO+8jOS5i+WQjuWcqCBgLmVudmAg5oiW566h55CG5Y+w6YeM5pS544CCCgrlronoo4XlrozmiJDlkI7vvJoKCjEuIOaJk+W8gOeuoeeQhuWPsCBgaHR0cDovL2xvY2FsaG9zdDo5MTAwL2FkbWluYO+8iOeZu+W9leWvhumSpeaYryBgLmVudmAg6YeM55qEIGBBUElfU0VDUkVUYO+8ie+8mwoyLiDlnKjjgIzmnLrlmajkurrnrqHnkIYg4oaSIOaOpeWFpeWQkeWvvOOAjemHjOWIm+W7uumjnuS5puW6lOeUqOW5tuS/neWtmOesrOS4gOS4quacuuWZqOS6uu+8iOS5n+WPr+S7peWFiOeci1vpo57kuablupTnlKjphY3nva7mjIfljZddKGRvY3MvZmVpc2h1LWFwcC1zZXR1cC5tZCnvvInvvJsKMy4g6YeN5ZCv5qGl5o6l6L+b56iL5L2/6YWN572u55Sf5pWI77yaYGx1Y2thZ2VudCByZXN0YXJ0YO+8mwo0LiDlnKjpo57kuabph4zmkJzliLDmnLrlmajkurrvvIzlj5HkuIDlj6Xor53mtYvor5XjgIIKCuWuieijhee7huiKgu+8iOS+nei1luOAgeebruW9lemAieaLqeOAgVBNMiDoh6rlkK/nrYnvvInop4EgW0lOU1RBTEwubWRdKElOU1RBTEwubWQp44CCCgojIyDlkb3ku6TpgJ/mn6UKCmBgYGJhc2gKIyDov5vnqIvnrqHnkIYKbHVja2FnZW50IHN0YXJ0ICAgICAgICAgICAgICAgICAjIOeUqCBQTTIg5ZCv5YqoIGJyaWRnZSArIGNvcmUKbHVja2FnZW50IHJlc3RhcnQgWy0tY29yZXwtLWFsbF0jIOmHjeWQr++8iOm7mOiupOWPqumHjeWQryBicmlkZ2XvvIkKbHVja2FnZW50IHN0b3AgWy0tY29yZXwtLWFsbF0gICAjIOWBnOatogpsdWNrYWdlbnQgbG9ncyBbLS1jb3JlXSAgICAgICAgICMg55yL5a6e5pe25pel5b+XCmx1Y2thZ2VudCBzdGF0dXMgICAgICAgICAgICAgICAgIyBQTTIg6L+b56iL54q25oCBCmx1Y2thZ2VudCB1cGRhdGUgICAgICAgICAgICAgICAgIyBnaXQgcHVsbCArIOmHjeijheS+nei1liArIOaehOW7uiArIOWQjOatpeaKgOiDvSArIOmHjeWQrwpsdWNrYWdlbnQgZG9jdG9yIFstLWpzb25dICAgICAgICMg5pys5py66L+Q6KGM5pe26K+K5patCgojIOahpeaOpSBBUEnvvIhsb2NhbGhvc3Q6OTEwMO+8iQpsdWNrYWdlbnQgYm90cyAgICAgICAgICAgICAgICAgICMg5YiX5Ye65omA5pyJIGJvdO+8iOacrOacuiArIHBlZXJz77yJCmx1Y2thZ2VudCB0YWxrIDxib3Q+IDxjaGF0SWQ+ICI85Lu75YqhPiIgICAgICAgICAgIyDorqnmn5DkuKogYm90IOW5sua0uwpsdWNrYWdlbnQgc2NoZWR1bGUgY3JvbiA8Ym90PiA8Y2hhdElkPiAnMCA5ICogKiAxLTUnICI85o+Q56S66K+NPiIgICMg5a6a5pe25Lu75YqhCmx1Y2thZ2VudCBzdGF0cyAgICAgICAgICAgICAgICAgIyDotLnnlKjkuI7nlKjph4/nu5/orqEKbHVja2FnZW50IHZvaWNlIHR0cyAi5L2g5aW9IiAtLXBsYXkgICMg5paH5pys6L2s6K+t6Z+zCmx1Y2thZ2VudCBoZWFsdGggICAgICAgICAgICAgICAgIyDlgaXlurfmo4Dmn6UKCiMg5Lit5aSu5pyN5Yqh77yIbG9jYWxob3N0OjkyMDDvvIkKbHVja2FnZW50IG1lbW9yeSBzZWFyY2ggIjzlhbPplK7or40+IiAgICMg5pCc5YWx5Lqr6K6w5b+GCmx1Y2thZ2VudCBtZW1vcnkgY3JlYXRlICI85qCH6aKYPiIgIjzlhoXlrrk+IgpsdWNrYWdlbnQgc2tpbGxzIGxpc3QgfCBpbnN0YWxsIDxuYW1lPgpsdWNrYWdlbnQgYWdlbnRzIGxpc3QgICAgICAgICAgICMgcGVlciBib3Qg5Zyw5Z2A57C/Cmx1Y2thZ2VudCBpbmJveCBwb2xsICAgICAgICAgICAgIyBDTEkgYWdlbnQg5pS25Lu2566xCmBgYAoK5a6M5pW05ZG95Luk5LiO5Y+C5pWw6KeBIFtDTEkg5Y+C6ICDXShkb2NzL2NsaS1yZWZlcmVuY2UubWQp44CCCgojIyDljYfnuqcKCnwg5a6J6KOF5pa55byPIHwg5Y2H57qn5ZG95LukIHwKfCAtLS0gfCAtLS0gfAp8IGdpdCDmo4Dlh7rvvIhnaXQgY2xvbmUgLyDkuIDooYzlkb3ku6TlnKjmnIkgZ2l0IOeahOacuuWZqOS4iu+8iSB8IGBsdWNrYWdlbnQgdXBkYXRlYO+8iGdpdCBwdWxsICsg6YeN6KOF5L6d6LWWICsg5p6E5bu6ICsg5ZCM5q2l5oqA6IO9ICsg6YeN5ZCv77yJIHwKfCDml6AgYC5naXRgIOeahOWuieijhe+8iOS4gOihjOWRveS7pOWcqOijuOacuuS4iueahCB0YXJiYWxsIOS4i+i9veaooeW8j++8iSB8IOWQjOagtyBgbHVja2FnZW50IHVwZGF0ZWDvvJp2MC43LjIyIOi1t+Wug+S8muWFiOaKiuWuieijheebruW9leWwseWcsOi9rOaIkCBnaXQg5qOA5Ye677yIYC5lbnZg44CBYGJvdHMuanNvbmAg562J5pys5py65paH5Lu25LiN5Yqo77yJ77yM5LmL5ZCO5LiOIGdpdCDlronoo4XlrozlhajkuIDmoLfjgIJ2MC43LjIxIOWPiuabtOaXqeeahCBDTEkg6L+Y5LiN5Lya6L2s5o2i77yM56ys5LiA5qyh5omL5Yqo6L2s5LiA5qyh77yaYGNkIH4vbHVja2FnZW50ICYmIGdpdCBpbml0IC1xICYmIGdpdCByZW1vdGUgYWRkIG9yaWdpbiBodHRwczovL2dpdGh1Yi5jb20vaGFveWFuLXlhbS9sdWNrYWdlbnQuZ2l0ICYmIGdpdCBmZXRjaCAtLWRlcHRoIDEgb3JpZ2luIG1haW4gJiYgZ2l0IGNoZWNrb3V0IC1mIC1CIG1haW4gRkVUQ0hfSEVBRCAmJiBnaXQgYnJhbmNoIC11IG9yaWdpbi9tYWluYO+8jOWGjSBgbHVja2FnZW50IHVwZGF0ZWAgfAoKPiDljYfnuqfml7bnlZnmhI/vvJoKPiAtICoqdjAuNy45IOi1t+eahOWKnuWFrOS4juWqkuS9k+W3peWFt+mTvioq77yITGlicmVPZmZpY2UgLyBmZm1wZWcgLyBwb3BwbGVyIC8g5a2X5L2TIC8gUHl0aG9uIHZlbnbvvInlj6rnlLEgYGluc3RhbGwuc2hgIOWuieijhe+8jGBsdWNrYWdlbnQgdXBkYXRlYCDkuI3kvJrooaXoo4XjgILogIHmnLrlmajljYfnuqflkI7ph43ot5HkuIDmrKEgYGJhc2ggaW5zdGFsbC5zaGDvvIjluYLnrYnvvIzlj6roo4XnvLrnmoTvvInvvIzmiJblhYjot5EgYGx1Y2thZ2VudCBkb2N0b3JgIOeciyBgb2ZmaWNlX21lZGlhX3Rvb2xjaGFpbmAg5LiA6aG544CCCj4gLSAqKnYwLjcuMTMg6LW355Sf5Zu+5LiN5YaN55SoIE9wZW5BSSBBUEkqKu+8mmBPUEVOQUlfSU1BR0VfQVBJX0tFWWAg5LiN5YaN55Sf5pWI44CC5Y+q6YWN5LqG5a6D55qE5py65Zmo6K+3IGBucG0gaSAtZyBAb3BlbmFpL2NvZGV4ICYmIGNvZGV4IGxvZ2luYO+8jOaIluWcqCBgLmVudmAg5aGrIGBBUktfQVBJX0tFWWDvvIznhLblkI4gYGx1Y2thZ2VudCByZXN0YXJ0YO+8m2BsdWNrYWdlbnQgZG9jdG9yYCDnmoQgYGltYWdlX2dlbmAg5LiA6aG55Lya5o+Q56S644CCCj4gLSAqKnYwLjcuMTgg6LW35YaF572u6KeG6aKR55Sf5oiQ5oqA6IO9IGBzZWVkYW5jZS12aWRlb2AqKu+8mmBsdWNrYWdlbnQgdXBkYXRlYCDkvJrlkIzmraXmioDog73vvJvlnKjnrqHnkIblj7DjgIzns7vnu5/phY3nva4g4oaSIOm7mOiupOiuvue9riDihpIg6KeG6aKR55Sf5oiQ44CN5aGr54Gr5bGx5pa56IifIGtlee+8iOeUn+WbvuW3sueUqCBTZWVkcmVhbSDnmoTmnLrlmajlhbHnlKjnjrDmnIkga2V577yM5LiN55So5YaN5aGr77yJ5Y2z5Y+v5byA6YCa44CCCj4gLSAqKnYwLjcuMTcg6LW3IGJvdCDlt6XkvZzljLrmoLnnm67lvZXlj6/oh6rlrprkuYkqKu+8jOS9huWPquWcqOWuieijheaXtuivoumXruOAguiAgeacuuWZqOayv+eUqCBgfi9wcm9qZWN0c2DvvJvopoHmjaLkvY3nva7lsLHlnKggYC5lbnZgIOWKoOS4gOihjCBgTFVDS0FHRU5UX1BST0pFQ1RTX0RJUj086Lev5b6EPmAg5YaNIGBsdWNrYWdlbnQgcmVzdGFydGDvvIjlj6rlvbHlk43kuYvlkI7mlrDlu7rnmoQgYm9077yJ44CCCgojIyDmlofmoaMKCnwg5paH5qGjIHwg5YaF5a65IHwKfCAtLS0gfCAtLS0gfAp8IFvpo57kuablupTnlKjphY3nva7mjIfljZddKGRvY3MvZmVpc2h1LWFwcC1zZXR1cC5tZCkgfCDlnKjpo57kuablvIDmlL7lubPlj7Dlu7rlupTnlKjjgIHphY3mnYPpmZDjgIHorqLpmIXkuovku7bjgIHlj5HluIPkuIrnur/nmoTpgJDmraXlvJXlr7wgfAp8IFvlvJXmk47phY3nva5dKGRvY3MvZW5naW5lcy5tZCkgfCBDbGF1ZGUgLyBEZWVwU2VlayAvIE1pbmlNYXgg5ZCE5byV5pOO55qE6K6k6K+B6Lev57q/44CB5YiH5o2i5pa55byP77yM5Lul5Y+K5Zyo566h55CG5Y+w5pS55YWo5bGA6buY6K6k5byV5pOO5LiO5qih5Z6LIHwKfCBb55uu5b2V57uT5p6EXShkb2NzL2RpcmVjdG9yeS1sYXlvdXQubWQpIHwg5a6J6KOF55uu5b2V44CB5q+PIGJvdCDlt6XkvZznm67lvZXnuqblrprjgIHimqDvuI8g5b2S5qGj55uu5b2V5LiO5Y+R6YCB5pqC5a2Y55uu5b2V55qE5YWz6ZSu5Yy65Yir44CB54q25oCB55uu5b2V5LiO5pel5b+X5L2N572uIHwKfCBb5a6a5pe25Lu75YqhXShkb2NzL3NjaGVkdWxpbmcubWQpIHwgQ0xJIC8g566h55CG5Y+wIC8gSFRUUCBBUEkg5LiJ56eN5YWl5Y+j77yMY3JvbiDkuI7ml7bljLrvvIzmmoLlgZzmgaLlpI0gfAp8IFvmioDog73kvZPns7tdKGRvY3MvY2xhdWRlLWNvZGUtc2tpbGxzLm1kKSB8IOmaj+ijheS4juWPr+mAieaKgOiDveOAgeaKgOiDveWPkeeOsOacuuWItuOAgeW3peS9nOWMuuS4pOe6p+aMh+S7pOaooeadvyB8CnwgW0NMSSDlj4LogINdKGRvY3MvY2xpLXJlZmVyZW5jZS5tZCkgfCBgbHVja2FnZW50YCDlhajlkb3ku6TnmoTnlKjpgJTkuI7npLrkvosgfAp8IFvnrqHnkIblj7Dkvb/nlKjmiYvlhoxdKGRvY3MvYWRtaW4tY29uc29sZS5tZCkgfCDlkITpobXpnaLor7TmmI7vvIjlkKvnvqTml6XmiqXvvInjgIHmnLrlmajkurrlop7liKDmlLnmtYHnqIvjgIHph43lkK/or63kuYnjgIHlronlhajor7TmmI4gfAp8IFvmm7TmlrDml6Xlv5ddKENIQU5HRUxPRy5tZCkgfCDlkITniYjmnKzlj5jmm7TvvJvniYjmnKzlj7fljbPnrqHnkIblj7DmgLvop4jpobXmiYDnpLogfAp8IFvorr7orqHnrJTorrBdKGRvY3MvZGVzaWduLW5vdGVzLm1kKSB8IDE4IOmhueWGheW7uuihjOS4uuWinuW8uu+8iOS7o+WPtyBB4oCTVe+8ieeahOihjOS4uuivtOaYjuOAgeW8gOWFs+S4juiuvuiuoeWPluiIjSB8CnwgW+W4uOingemXrumimOaOkuafpV0oZG9jcy90cm91Ymxlc2hvb3RpbmcubWQpIHwg56uv5Y+j5Y2g55So44CB5Luj55CG5Y+Y6YeP5Z2R44CB5ZCv5Yqo5aSx6LSl44CB5Y2h54mH5oql44CM5ZCv5Yqo5Lu75Yqh5aSx6LSl44CN5oiW56m655m944CB55Sf5Zu+IC8g6KeG6aKR5aSx6LSl44CB566h55CG5Y+w5omT5LiN5byA562JIHwKCiMjIOWuieWFqOaPkOekugoKLSBicmlkZ2Ug5LiOIGNvcmUg6buY6K6k5Y+q55uR5ZCsIGAxMjcuMC4wLjFg77yb5oqKIGBMVUNLQUdFTlRfQVBJX0hPU1RgIOiuvuS4uiBgMC4wLjAuMGAg5LmL5YmN6K+35Yqh5b+F6K+7W+euoeeQhuWPsOS9v+eUqOaJi+WGjOeahOWuieWFqOS4gOiKgl0oZG9jcy9hZG1pbi1jb25zb2xlLm1kI+WuieWFqOivtOaYjinjgIIKLSBgLmVudmAg5LiOIGBib3RzLmpzb25gIOWQq+WvhumSpe+8jOWuieijheiEmuacrOS8muWwhuWFtuadg+mZkOiuvuS4uiA2MDDvvIzor7fli7/mj5DkuqTov5vniYjmnKzlupPjgIIKCiMjIOiHtOiwouS4juadpea6kAoKTHVja2FnZW50IOWfuuS6jiAqKltNZXRhQm90XShodHRwczovL3h2aXJvYm90aWNzLmNvbS9tZXRhYm90LykqKiDmnoTlu7rigJTigJTlnKjlhbbpo57kuabmoaXmjqXkuI7lpJrlvJXmk44K5p625p6E5LmL5LiK77yM6J6N5YWl5pWw5pyI55yf5a6eIGJvdCDpm4bnvqTov5DooYzmsonmt4DnmoTooYzkuLrlop7lvLrkuI7lj6/pnaDmgKfkv67lpI3vvIzohLHmlY/ph43mnoTogIzmnaXjgIIK5oSf6LCi5Y6f6aG555uu5L2c6ICF55qE5bel5L2c44CCCgojIyBMaWNlbnNlCgpNSVTvvIjlkKsgTWV0YUJvdCDnmoTlj4zniYjmnYPlo7DmmI7vvInvvIzop4EgW0xJQ0VOU0VdKExJQ0VOU0Up44CCCg==
+<p align="center">
+  <img src="docs/images/banner.jpg" alt="Luckagent：同事与 Claude、GPT Image、Seedream、Seedance 在飞书群里协同，交付物沉淀为企业的核心能力" width="100%">
+</p>
+
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo-lockup-dark.png">
+    <img src="docs/images/logo-lockup.png" alt="Luckagent" height="80">
+  </picture>
+</h1>
+
+<h3 align="center">
+  让你的同事/伙伴与当前最强的模型在飞书群内协同工作，<br>
+  不仅只是提升效率与交付质量，更是企业核心能力的沉淀。
+</h3>
+<p align="center">
+https://github.com/user-attachments/assets/38e836f1-ae50-42ca-ab29-d06b968ebfff
+</p>
+<p align="center">
+  <sub>🎬 56 秒宣传片 · 配乐 "Carefree" — Kevin MacLeod (incompetech.com)，<a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> 授权</sub>
+</p>
+
+
+把飞书群聊接到 AI agent 引擎的自托管机器人平台。每个飞书机器人背后是一个完整的 agent 引擎——Claude Code（`@anthropic-ai/claude-agent-sdk` / Claude Code CLI），或指向 DeepSeek / MiniMax 官方 Anthropic 兼容端点的同一运行时——在各自独立的工作目录里拥有完整的工具权限：读写文件、跑命令、调 API、收发聊天附件。你在群里 @机器人说一句话，它就在你自己的 Mac 上替你干活，并把过程与产物以卡片形式实时回贴到群里。
+
+> 本项目基于 [MetaBot](https://xvirobotics.com/metabot/) 构建（见文末[致谢与来源](#致谢与来源)）。
+
+## 界面一览
+
+<table>
+  <tr>
+    <td width="34%" align="center"><b>飞书端</b>——群里 @bot 一句话派活</td>
+    <td width="66%" align="center"><b>Web 管理台</b>——<code>localhost:9100/admin</code></td>
+  </tr>
+  <tr>
+    <td valign="top"><img src="docs/images/feishu-chat.jpg" alt="飞书端：@bot 生图，Complete 卡片带上下文/费用/模型页脚，产物直接回群"></td>
+    <td valign="top"><img src="docs/images/admin-console.jpg" alt="管理台系统总览：系统状态条、今日任务 / 技能调用 / 记忆沉淀 / 定时任务卡片、待处理、实时动态、机器人列表"></td>
+  </tr>
+</table>
+
+左：@机器人说「做一张喵咪图」，bot 跑完贴出 Complete 卡片（页脚是真实的上下文用量 / 费用 / 服役模型），生成的图片直接发进群。右：管理台系统总览——顶部一行系统状态，四张卡片看今日任务（成员发起 / 定时）、近 7 天技能调用、记忆沉淀与定时任务；「待处理」汇总需要处理的事，「实时动态」是最近的任务流，下方每个 bot 的状态、任务、技能调用与记忆积累（bot 名已打码）。
+
+## 项目目标
+
+- **把 agent 从终端搬进团队日常沟通的地方。** Claude Code 这类 agent 很强，但入口是本机终端、一人一会话。Luckagent 让它以飞书机器人的身份 7×24 常驻：团队任何人在群里 @它 就能派活，产物（PPT、表格、文档、图片、视频、代码、语音）直接回到群里。
+- **完全自托管、数据不出自己机器。** 跑在你的 Mac mini / MacBook 上：飞书凭证、聊天记录、工作文件、API key 都留在本机；对外只有到飞书开放平台的 websocket 长连接和你选择的模型 API。两个服务端口默认只绑 `127.0.0.1`。
+- **多 bot、多引擎、一份配置。** 一台机器跑任意多个机器人，每个 bot 独立的飞书应用、工作目录、引擎（Claude / DeepSeek / MiniMax）与预算限额，适合「一个项目一个 bot 同事」的用法。
+- **生产可靠优先。** 本项目源自一套在真实团队里连续运行数月的飞书 bot 集群，消息合并、附件收发、发送目录清理、引用上下文注入、空闲会话自动换新、记忆库出站闸门等 18 项行为增强都是实际踩坑后的沉淀（见[设计笔记](docs/design-notes.md)），并配有上千条自动化测试，每次提交都在 CI 上跑全量。
+
+## 真实团队里，bot 每天在做什么
+
+下面是一个真实团队（18 个项目 bot，一周近千个任务）里最常见的五类用法，客户、品牌与人名均已隐去：
+
+| 场景 | 群里这样说（示例） | bot 交付什么 |
+| --- | --- | --- |
+| **营销视觉与电商图** | 「按第一张图的风格，把后面几张礼盒图做成一套场景图，礼盒上的字别动」→「把花去掉」「调成手机实拍感」 | 一套风格统一的场景图，产品外观与包装文字保持不变；群里一句话一轮，逐步微调到定稿 |
+| **方案与提案** | 「根据会议纪要和我的 flow，出 5–6 页 social plan」「按客户批注改一版 V2 视频框架，另存新链接，改动处高亮」 | 可编辑的 PPT、飞书文档；改稿保留旧版、标出改动，方便负责人快速复核 |
+| **数据周报与诊断** | 「填本周私域周数据，去掉某渠道的数据，列出有反馈的用户」「这天的首回平均时长为什么是 46 分钟？」 | 飞书云表格与多维表格，附数据口径说明和结论；异常值会追到原始记录找原因 |
+| **文案与沟通** | 「写一版中秋国庆的社群关怀文案」「把给客户的反馈改得委婉具体，别用主观批判的词」 | 节日文案、直播串词、促销短句、对外沟通稿，按指定调性一次给出多个备选 |
+| **定时自动化** | 每天早上自动跑：群聊总结、行业新闻简报、合同巡检与月度收入确认、人事关键节点提醒、服务到期预警 | 无需人叫：定时读写多维表格 / 云文档，结果发回对应的群；涉及金额等敏感数据只留本地 |
+
+这些产出都直接回到群里，团队的每一次纠偏（「字体不对」「格式按上月的保持」）都会沉淀进 bot 的记忆，需要跨 bot 共用的再存进共享知识库——下次不用再说一遍，这正是「能力沉淀」的来源。
+
+## 架构
+
+两个常驻进程，由 PM2 管理：
+
+```
+                       ┌──────────────────────────────────────────────┐
+  飞书开放平台          │  luckagent-bridge          (127.0.0.1:9100)  │
+  ┌──────────┐  长连接  │  ┌────────────┐   ┌───────────────────────┐  │
+  │ 飞书应用 A │◄───────►│  │ Bot A 桥接  │──►│ 引擎: Claude Code     │  │
+  │ 飞书应用 B │◄───────►│  │ Bot B 桥接  │──►│  / DeepSeek / MiniMax │  │
+  │   ...    │ websocket│  │   ...      │   │ (每 bot 独立工作目录)   │  │
+  └──────────┘          │  └────────────┘   └───────────────────────┘  │
+                        │  HTTP API (Bearer)  +  Web 管理台 /admin      │
+                        └──────────────┬───────────────────────────────┘
+                                       │
+        luckagent CLI ─────────────────┤ :9100  (bots/talk/schedule/…)
+        (~/.local/bin)                 │
+                                       ▼
+                        ┌──────────────────────────────────────────────┐
+                        │  luckagent-core            (127.0.0.1:9200)  │
+                        │  共享记忆 / 技能中心 / Agent 总线 / 收件箱     │
+                        │  SQLite: ~/.luckagent-core/data/central.db   │
+                        └──────────────────────────────────────────────┘
+```
+
+- **luckagent-bridge**：通过 websocket 长连接接入每个配置的飞书应用，驱动 agent 引擎跑任务，同时暴露 HTTP API（`API_SECRET` Bearer 鉴权）并托管 Web 管理台 `http://localhost:9100/admin`。
+- **luckagent-core**：中央存储服务——跨 bot 共享记忆、技能注册中心、agent 地址簿与 CLI 收件箱，token 由 `central-admin` 签发。
+- **luckagent CLI**：单一命令行入口，覆盖进程管理、bridge API 与 core 功能三类命令。
+
+两个端口默认都只绑 `127.0.0.1`，不额外配置不会暴露到网络。
+
+### 一条消息的生命周期
+
+1. **接收**：飞书事件经 websocket 长连接推到 bridge（无需公网回调地址）；快速连发的多条消息会自动合并成一轮。@bot 触发时按飞书接口拉取这个人上一次 @ 之后发的材料（文本、链接、图片、文件）一并带上，支持「先发材料、最后 @」的用法；断连重连后会补扫盲区消息。
+2. **会话**：每个聊天（群/私聊）对应一个持续的 agent 会话——各引擎默认走**持久执行器池**（长驻进程，支持 Agent Teams、`/goal` 多轮自动推进、后台任务），其余引擎逐回合拉起。会话空闲 3 小时以上且经历过上下文压缩时自动开新会话，并把旧会话最近的交接摘要注入首条提示词，避免会话文件无限膨胀、压缩随机砸在任务中间。
+3. **执行**：引擎在该 bot 的独立工作目录（默认 `~/projects/<bot名>`，根目录安装时可改）里全工具运行；聊天里发的文件自动下载到 `inputs/` 供 agent 直接使用。装机即备好办公与媒体工具链（python-pptx / openpyxl / Pillow 等 Python 基础包、LibreOffice、ffmpeg、poppler、Noto CJK 字体），做 PPT、表格、文档、PDF、图片、语音不用临时装环境。
+4. **回贴**：过程流式更新到飞书卡片；agent 放进发送暂存目录的产物**发过即删**，回合结束再补扫一次防漏发（归档另存 `outputs/`）。
+5. **管控**：预算限额、并发上限、群聊白名单、私聊是否也需 @、`/model` 会话内切引擎等都按 bot 配置；全机默认引擎 / 模型 / 生图后端在管理台「系统配置」里改；全程记账可在管理台与 `luckagent stats` 查看。回合因故起不来（比如执行器拉起失败）时，卡片会收成错误态并写明原因，不会一直转圈。
+
+## 特性
+
+- **多 bot 单进程**：一份 `bots.json` 配任意多个飞书机器人，各自独立的应用凭证、工作目录、引擎与预算限额。
+- **多引擎可选**：每个 bot 用 `engine: "claude" | "deepseek" | "minimax"` 选择后端；Claude 支持 API key 或订阅登录，DeepSeek / MiniMax 走各家官方 Anthropic 兼容端点、只要 key 零安装（均支持看图）。所有引擎共享同一 Claude Code 运行时——持久会话、Agent Teams、记忆体系完全一致。全机默认引擎与各引擎默认模型可在管理台直接改，单个 bot 仍可单独覆盖。
+- **Web 管理台**：系统总览（运行状态、待处理事项、实时动态、技能与记忆的活跃情况）、机器人管理（含手把手的飞书接入向导，列表显示每个 bot 实际生效的模型）、定时任务（按类型 / bot / 状态筛选，可看完整提示词）、群日报（所有 bot 的群一张表）、技能（项目技能的使用统计）、记忆（全 bot 总览、索引占用预警、全文搜索）、运行日志、系统配置（默认引擎 / 模型 / 生图后端可编辑，保存后确认即重启生效），浏览器里完成从建应用到跑通的全流程。
+- **定时任务与群日报**：一次性延迟与 cron 周期任务，CLI / 管理台 / HTTP API 三种入口，持久化、重启自动恢复；群日报按群名一键开关，默认每天早 7 点总结昨天全天。
+- **生产磨出来的稳定性**（详见 [设计笔记](docs/design-notes.md)）：文件上传超时重试、快速连发消息合并、群聊引用回复精确通知、被引消息上下文注入、@ 时按接口拉本轮材料、空闲会话自动换新并交接、出站内容脱敏、记忆库出站闸门、发送目录「发过即删 + 漏发补扫」、超大附件分片下载、长连接断连补扫、发送失败明确告知等，全部内建。
+- **跨 bot 协作**：共享记忆沉淀知识、技能中心复用方法、agent 总线让 bot 之间互相委托任务，也支持跨主机 peers 联邦。
+- **办公与媒体工具链**：安装脚本一次装齐 bot 产出所需的 Python 基础包（python-pptx / openpyxl / Pillow / pandas / PyMuPDF 等，独立 venv 不碰系统 Python）、LibreOffice、ffmpeg、poppler 与 Noto CJK 字体；`luckagent doctor` 可检查是否齐全。
+- **生图与视频**：生图有 ChatGPT 订阅就走本机 Codex CLI 内置的生图（不需要 API key），没有订阅用火山 Seedream，Codex 未登录或撞订阅额度时自动改用 Seedream；视频用火山 Seedance（文生视频、首帧图生视频、参考图 / 视频 / 音频），与 Seedream 共用一把火山方舟 key。用群里发来的视频 / 音频当参考素材时需要可选的火山 TOS，素材用完自动删除。安装脚本会代装 Codex 并引导登录、询问火山 key，之后在管理台随时切换或补填。
+- **网站自动化**：安装时默认装好 opencli，bot 能抓取、搜索 155+ 个网站（社媒、电商、资讯等），并驱动本机已登录的 Chrome 操作网页。
+- **语音**：文本转语音（豆包 / OpenAI / ElevenLabs / Edge TTS），可配置语音回复。
+
+## 系统要求
+
+- **macOS**（目标机型 Mac mini / MacBook，Apple Silicon）；安装脚本会自动补齐 Homebrew、node 22、PM2、lark-cli，以及办公与媒体工具链（ffmpeg / LibreOffice / poppler / Noto CJK 字体 / Python 基础包）
+- **能访问海外源的网络**：安装要从 GitHub、Homebrew、npm、PyPI 下载，国内网络请开梯子并切到**虚拟网卡（TUN）模式**（推荐 Clash Verge）——普通「系统代理」模式对终端里的下载不生效。安装脚本开头会先测一遍，有问题会停下来提示
+- 一个**飞书企业自建应用**（安装后管理台的「接入向导」会手把手带你创建，或先看[配置指南](docs/feishu-app-setup.md)）
+- 至少一种**引擎认证**：Claude 订阅登录或 `ANTHROPIC_API_KEY`；或 DeepSeek / MiniMax 的 API key（`DEEPSEEK_API_KEY` / `MINIMAX_API_KEY`，零 CLI 安装）。详见[引擎配置](docs/engines.md)
+- 网站自动化（可选）：Google Chrome，并登录 bot 要访问的网站（opencli 由安装脚本代装）
+- 生图 / 视频（可选）：生图用 ChatGPT 订阅（走 Codex CLI，安装脚本代装）或火山方舟 `ARK_API_KEY`；视频需要火山方舟 `ARK_API_KEY`；参考本地视频 / 音频再加火山 TOS
+
+## 安装
+
+两种方式，装完效果相同（推荐方式 A）：
+
+**方式 A · 一行命令（推荐，零前置依赖）**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/haoyan-yam/luckagent/main/scripts/get.sh | bash
+```
+
+只用 macOS 自带的 curl/tar/bash——全新机器（没有 Node、没有 git）也能直接跑。脚本把仓库取到 `~/luckagent` 后转交交互式 install.sh；重复执行安全（检测到现有安装会给升级指引）。想先看脚本内容：[scripts/get.sh](scripts/get.sh)。可用 `LUCKAGENT_DIR` / `LUCKAGENT_YES=1` 等环境变量定制，见脚本头部注释。
+
+> 机器上已有 Node 的话，`npx luckagent init` 效果相同。
+
+**方式 B · git clone**
+
+```bash
+git clone https://github.com/haoyan-yam/luckagent.git ~/luckagent
+cd ~/luckagent && bash install.sh
+```
+
+git 检出天然支持 `luckagent update` 一键升级。
+
+安装开始前会先做**网络检查**：把 GitHub / Homebrew / npm / PyPI / Claude 这些源并行测一遍连通与速度，连不上或很慢时停下来，提示开梯子的 TUN 模式后回车重测（也可以选择忽略继续）。之后随时可以用 `luckagent netcheck` 再测。
+
+安装过程中会依次询问：**默认引擎与认证**、**生图与视频**（有 ChatGPT 订阅就代装 Codex 并登录；火山方舟 key 用于视频和 Seedream 生图；可选配 TOS）、**bot 工作区根目录**（默认 `~/projects`）。都可以直接回车用默认值，之后在 `.env` 或管理台里改。
+
+安装完成后：
+
+1. 打开管理台 `http://localhost:9100/admin`（登录密钥是 `.env` 里的 `API_SECRET`）；
+2. 在「机器人管理 → 接入向导」里创建飞书应用并保存第一个机器人（也可以先看[飞书应用配置指南](docs/feishu-app-setup.md)）；
+3. 重启桥接进程使配置生效：`luckagent restart`；
+4. 在飞书里搜到机器人，发一句话测试。
+
+安装细节（依赖、目录选择、PM2 自启等）见 [INSTALL.md](INSTALL.md)。
+
+## 命令速查
+
+```bash
+# 进程管理
+luckagent start                 # 用 PM2 启动 bridge + core
+luckagent restart [--core|--all]# 重启（默认只重启 bridge）
+luckagent stop [--core|--all]   # 停止
+luckagent logs [--core]         # 看实时日志
+luckagent status                # PM2 进程状态
+luckagent update                # git pull + 重装依赖 + 构建 + 同步技能 + 重启
+luckagent doctor [--json]       # 本机运行时诊断
+
+# 桥接 API（localhost:9100）
+luckagent bots                  # 列出所有 bot（本机 + peers）
+luckagent talk <bot> <chatId> "<任务>"          # 让某个 bot 干活
+luckagent schedule cron <bot> <chatId> '0 9 * * 1-5' "<提示词>"  # 定时任务
+luckagent stats                 # 费用与用量统计
+luckagent voice tts "你好" --play  # 文本转语音
+luckagent health                # 健康检查
+
+# 中央服务（localhost:9200）
+luckagent memory search "<关键词>"   # 搜共享记忆
+luckagent memory create "<标题>" "<内容>"
+luckagent skills list | install <name>
+luckagent agents list           # peer bot 地址簿
+luckagent inbox poll            # CLI agent 收件箱
+```
+
+完整命令与参数见 [CLI 参考](docs/cli-reference.md)。
+
+## 升级
+
+| 安装方式 | 升级命令 |
+| --- | --- |
+| git 检出（git clone / 一行命令在有 git 的机器上） | `luckagent update`（git pull + 重装依赖 + 构建 + 同步技能 + 重启） |
+| 无 `.git` 的安装（一行命令在裸机上的 tarball 下载模式） | 同样 `luckagent update`：v0.7.22 起它会先把安装目录就地转成 git 检出（`.env`、`bots.json` 等本机文件不动），之后与 git 安装完全一样。v0.7.21 及更早的 CLI 还不会转换，第一次手动转一次：`cd ~/luckagent && git init -q && git remote add origin https://github.com/haoyan-yam/luckagent.git && git fetch --depth 1 origin main && git checkout -f -B main FETCH_HEAD && git branch -u origin/main`，再 `luckagent update` |
+
+> 升级时留意：
+> - **v0.7.9 起的办公与媒体工具链**（LibreOffice / ffmpeg / poppler / 字体 / Python venv）只由 `install.sh` 安装，`luckagent update` 不会补装。老机器升级后重跑一次 `bash install.sh`（幂等，只装缺的），或先跑 `luckagent doctor` 看 `office_media_toolchain` 一项。
+> - **v0.7.13 起生图不再用 OpenAI API**：`OPENAI_IMAGE_API_KEY` 不再生效。只配了它的机器请 `npm i -g @openai/codex && codex login`，或在 `.env` 填 `ARK_API_KEY`，然后 `luckagent restart`；`luckagent doctor` 的 `image_gen` 一项会提示。
+> - **v0.7.18 起内置视频生成技能 `seedance-video`**：`luckagent update` 会同步技能；在管理台「系统配置 → 默认设置 → 视频生成」填火山方舟 key（生图已用 Seedream 的机器共用现有 key，不用再填）即可开通。
+> - **v0.7.17 起 bot 工作区根目录可自定义**，但只在安装时询问。老机器沿用 `~/projects`；要换位置就在 `.env` 加一行 `LUCKAGENT_PROJECTS_DIR=<路径>` 再 `luckagent restart`（只影响之后新建的 bot）。
+
+## 文档
+
+| 文档 | 内容 |
+| --- | --- |
+| [飞书应用配置指南](docs/feishu-app-setup.md) | 在飞书开放平台建应用、配权限、订阅事件、发布上线的逐步引导 |
+| [引擎配置](docs/engines.md) | Claude / DeepSeek / MiniMax 各引擎的认证路线、切换方式，以及在管理台改全局默认引擎与模型 |
+| [目录结构](docs/directory-layout.md) | 安装目录、每 bot 工作目录约定、⚠️ 归档目录与发送暂存目录的关键区别、状态目录与日志位置 |
+| [定时任务](docs/scheduling.md) | CLI / 管理台 / HTTP API 三种入口，cron 与时区，暂停恢复 |
+| [技能体系](docs/claude-code-skills.md) | 随装与可选技能、技能发现机制、工作区两级指令模板 |
+| [CLI 参考](docs/cli-reference.md) | `luckagent` 全命令的用途与示例 |
+| [管理台使用手册](docs/admin-console.md) | 各页面说明（含群日报）、机器人增删改流程、重启语义、安全说明 |
+| [更新日志](CHANGELOG.md) | 各版本变更；版本号即管理台总览页所示 |
+| [设计笔记](docs/design-notes.md) | 18 项内建行为增强（代号 A–U）的行为说明、开关与设计取舍 |
+| [常见问题排查](docs/troubleshooting.md) | 端口占用、代理变量坑、启动失败、卡片报「启动任务失败」或空白、生图 / 视频失败、管理台打不开等 |
+
+## 安全提示
+
+- bridge 与 core 默认只监听 `127.0.0.1`；把 `LUCKAGENT_API_HOST` 设为 `0.0.0.0` 之前请务必读[管理台使用手册的安全一节](docs/admin-console.md#安全说明)。
+- `.env` 与 `bots.json` 含密钥，安装脚本会将其权限设为 600，请勿提交进版本库。
+
+## 致谢与来源
+
+Luckagent 基于 **[MetaBot](https://xvirobotics.com/metabot/)** 构建——在其飞书桥接与多引擎
+架构之上，融入数月真实 bot 集群运行沉淀的行为增强与可靠性修复，脱敏重构而来。
+感谢原项目作者的工作。
+
+## License
+
+MIT（含 MetaBot 的双版权声明），见 [LICENSE](LICENSE)。
