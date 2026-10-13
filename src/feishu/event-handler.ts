@@ -164,6 +164,7 @@ export function createReceiveHandler(
         let fileKey: string | undefined;
         let fileName: string | undefined;
         let postExtraImages: string[] = [];
+        let postFiles: PostFile[] = [];
 
         if (msgType === 'image') {
           // Image message: extract image_key
@@ -205,10 +206,11 @@ export function createReceiveHandler(
             imageKey = parsed.postImages[0];
             postExtraImages = parsed.postImages.slice(1);
           }
+          postFiles = parsed.postFiles;
         }
 
         if (msgType === 'text' || msgType === 'post') {
-          if (!text && !imageKey) {
+          if (!text && !imageKey && postFiles.length === 0) {
             logger.debug('Empty message after stripping mentions');
             return;
           }
@@ -216,9 +218,11 @@ export function createReceiveHandler(
           // If text is empty but we have an image (e.g. @bot + image in group chat), set default prompt
           if (!text && imageKey) {
             text = '请分析这张图片';
+          } else if (!text && postFiles.length > 0) {
+            text = '请分析这个文件';
           }
 
-          logger.info({ userId, chatId, chatType, text: text.slice(0, 100), imageKey }, 'Received message');
+          logger.info({ userId, chatId, chatType, text: text.slice(0, 100), imageKey, postFiles: postFiles.map(f => f.fileName) }, 'Received message');
         }
 
         // Collect extra media: post images (2nd+) and cached group media
@@ -229,6 +233,12 @@ export function createReceiveHandler(
             imageKey: key,
           }));
           logger.info({ chatId, postExtraImageCount: postExtraImages.length }, 'Attached extra images from post');
+        }
+        // Text + file sent together arrives as a post with a top-level `files` array.
+        if (postFiles.length > 0) {
+          const fileMedia = postFiles.map(f => ({ messageId, fileKey: f.fileKey, fileName: f.fileName }));
+          extraMedia = extraMedia ? [...extraMedia, ...fileMedia] : fileMedia;
+          logger.info({ chatId, postFileCount: postFiles.length }, 'Attached files from post');
         }
         // [design-note S] On an @mention, pull this sender's "round" (everything
         // they sent since their previous @mention) from the Feishu API: texts are
@@ -242,7 +252,7 @@ export function createReceiveHandler(
           const round: RoundContext = await fetchRoundContext(
             (c, st, et, pt) => messageSender.listMessages(c, st, et, pt),
             { chatId, triggerMessageId: messageId, triggerTimeMs, senderId: userId, botOpenId },
-            { extractPostText: extractTextFromPost, extractPostImages: extractImagesFromPost },
+            { extractPostText: extractTextFromPost, extractPostImages: extractImagesFromPost, extractPostFiles: extractFilesFromPost },
           );
           if (round.error) {
             logger.warn({ chatId, chatType, userId, error: round.error, scanned: round.scanned }, 'Round context fetch failed; continuing without it');
@@ -328,16 +338,18 @@ export function createEventDispatcher(
  */
 function extractPromptText(
   message: any, msgType: 'text' | 'post', logger: Logger,
-): { text: string; postImages: string[] } | undefined {
+): { text: string; postImages: string[]; postFiles: PostFile[] } | undefined {
   let text: string;
   let postImages: string[] = [];
+  let postFiles: PostFile[] = [];
   try {
     const content = JSON.parse(message.content);
     if (msgType === 'post') {
       logger.debug({ postContent: JSON.stringify(content).slice(0, 500) }, 'Raw post content');
       text = extractTextFromPost(content);
       postImages = extractImagesFromPost(content);
-      logger.debug({ extractedText: text.slice(0, 200), postImageCount: postImages.length }, 'Extracted post content');
+      postFiles = extractFilesFromPost(content);
+      logger.debug({ extractedText: text.slice(0, 200), postImageCount: postImages.length, postFileCount: postFiles.length }, 'Extracted post content');
     } else {
       text = content.text || '';
     }
@@ -349,7 +361,7 @@ function extractPromptText(
   text = text.replace(/@_\w+\s*/g, '').trim();
   // Strip Feishu auto-generated markdown links: [text](url) → text
   text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
-  return { text, postImages };
+  return { text, postImages, postFiles };
 }
 
 /**
@@ -389,6 +401,42 @@ export function extractImagesFromPost(content: Record<string, unknown>): string[
   }
 
   return keys;
+}
+
+export interface PostFile {
+  fileKey: string;
+  fileName: string;
+}
+
+/**
+ * Extract file attachments from a Feishu post (rich text) message.
+ * When a user sends text + a file together, Feishu delivers a post whose
+ * attachments sit in a top-level `files` array (not inside `content`):
+ *   { "content": [[...]], "files": [{ "file_key": "...", "file_name": "x.zip", "is_folder": false }] }
+ * Locale-wrapped bodies are checked too. Folders are skipped.
+ */
+// Exported so round-context can reuse it.
+export function extractFilesFromPost(content: Record<string, unknown>): PostFile[] {
+  const lists: unknown[] = [];
+  if (Array.isArray(content.files)) lists.push(...content.files);
+  for (const locale of Object.values(content)) {
+    if (locale && typeof locale === 'object' && !Array.isArray(locale)) {
+      const loc = locale as Record<string, unknown>;
+      if (Array.isArray(loc.files)) lists.push(...loc.files);
+    }
+  }
+  const files: PostFile[] = [];
+  const seen = new Set<string>();
+  for (const f of lists) {
+    if (!f || typeof f !== 'object') continue;
+    const el = f as Record<string, unknown>;
+    if (el.is_folder === true) continue;
+    if (typeof el.file_key !== 'string' || typeof el.file_name !== 'string') continue;
+    if (seen.has(el.file_key)) continue;
+    seen.add(el.file_key);
+    files.push({ fileKey: el.file_key, fileName: el.file_name });
+  }
+  return files;
 }
 
 /**

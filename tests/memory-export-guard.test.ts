@@ -49,6 +49,7 @@ describe('classifyBashCommand：应拒绝', () => {
     ['bare 目录名 + cp', 'cp -r memory /tmp/x/'],
     ['lark-cli 直传 zip', `lark-cli --profile foo drive +upload --file ./deck-bundle.zip --as bot`],
     ['lark-cli 直传 tar.gz', `cd outputs && lark-cli im +files-upload --file ./x.tar.gz --profile foo --as bot`],
+    ['下载放行不连带：同命令另一段上传 zip 照拦', `lark-cli im +messages-resources-download --message-id om_x --file-key f --type file --output ./in.zip --as bot && lark-cli drive +upload --file ./in.zip --as bot`],
   ];
   for (const [name, cmd] of deny) {
     it(name, () => {
@@ -84,6 +85,8 @@ describe('classifyBashCommand：应放行', () => {
     ['bare 词 + lark-cli 不定罪', 'lark-cli im +messages-send --chat-id oc_x --text "memory 已更新" --profile foo --as bot'],
     ['python 无关脚本', 'python3 work/build_deck.py --out outputs/'],
     ['空命令', ''],
+    ['lark-cli 下载用户发来的 zip（2026-10-13 误拦）', `cd /Users/x/projects/cpbtmall/inputs && lark-cli --profile CPBTmallbot im +messages-resources-download --message-id om_x --file-key file_v3_x --type file --output ./cpb-t30-eligibility-check.zip --as bot 2>&1 | tail -3; mkdir -p skill && unzip -o cpb-t30-eligibility-check.zip -d skill`],
+    ['lark-cli drive 下载 zip', 'lark-cli drive +download --file-token boxx --output ./a.zip --profile foo --as bot'],
     ['项目里名为 memory-*.md 的普通文件', 'cp work/memory-usage-report.md outputs/'],
   ];
   for (const [name, cmd] of allow) {

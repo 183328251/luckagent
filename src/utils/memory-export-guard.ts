@@ -116,9 +116,18 @@ export function classifyBashCommand(command: string): GuardVerdict | null {
   }
 
   // ── lark-cli 直传压缩包（绕过桥接的文件检查）────────────────────────────
+  // 只拦外传：按 ; && || | 换行切成子命令逐段看，`+xxx-download` 类下载（把用户发来的
+  // 压缩包收进本地）放行；同一条命令里另一段 lark-cli 上传压缩包照拦。
   if (usesLarkCli) {
     const ARCHIVE = /\.(zip|tar|tgz|tbz2|txz|7z|rar)$|\.tar\.(gz|bz2|xz|zst)$/i;
-    if (tokens.some((t) => ARCHIVE.test(t))) return { code: 'archive-upload', reason: ARCHIVE_REASON };
+    for (const seg of cmd.split(/;|&&|\|\||\||\n/)) {
+      const segTokens = seg.split(/\s+/).filter(Boolean)
+        .map((t) => t.replace(/^[\s"'`(){}[\]$]+/, '').replace(/[\s"'`(){}[\];,]+$/, ''))
+        .filter(Boolean);
+      if (!segTokens.some((t) => /(^|[\\/])lark-cli$/.test(t))) continue;
+      if (segTokens.some((t) => /^\+[\w-]*download$/i.test(t))) continue;
+      if (segTokens.some((t) => ARCHIVE.test(t))) return { code: 'archive-upload', reason: ARCHIVE_REASON };
+    }
   }
 
   return null;

@@ -4,7 +4,7 @@ import {
   ROUND_MAX_AGE_MS, ROUND_MAX_MESSAGES,
   type ListedMessage, type ListPage, type RoundQuery,
 } from '../src/feishu/round-context.js';
-import { extractTextFromPost, extractImagesFromPost } from '../src/feishu/event-handler.js';
+import { extractTextFromPost, extractImagesFromPost, extractFilesFromPost } from '../src/feishu/event-handler.js';
 
 /**
  * [design-note S] 本轮上下文拉取 — 纯函数层。夹具按 2026-09-05 真实 im.message.list
@@ -14,7 +14,7 @@ import { extractTextFromPost, extractImagesFromPost } from '../src/feishu/event-
 const BOT = 'ou_bot';
 const KK = 'ou_kk';
 const T0 = Date.parse('2026-09-05T15:49:00+08:00');
-const deps = { extractPostText: extractTextFromPost, extractPostImages: extractImagesFromPost };
+const deps = { extractPostText: extractTextFromPost, extractPostImages: extractImagesFromPost, extractPostFiles: extractFilesFromPost };
 
 let n = 0;
 function msg(o: Partial<ListedMessage> & { at: number; from?: 'kk' | 'bot' | 'other'; type?: string; content?: unknown; at_bot?: boolean }): ListedMessage {
@@ -87,6 +87,26 @@ describe('mapMessage — 单条映射', () => {
     const r = mapMessage(m, deps);
     expect(r.text?.text).toBe('纪要 (https://x.feishu.cn/docx/A)');
     expect(r.media).toEqual([{ messageId: m.message_id, imageKey: 'img_p' }]);
+  });
+  it('post: text + file sent together → top-level files become media (2026-10-13 zip 丢失)', () => {
+    const m = msg({ at: T0, type: 'post', content: {
+      title: '',
+      content: [[{ tag: 'text', text: '你看一下这个 skill' }]],
+      files: [
+        { file_key: 'file_zip', file_name: 'skill.zip', is_folder: false },
+        { file_key: 'file_dir', file_name: 'folder', is_folder: true },
+      ],
+    } });
+    const r = mapMessage(m, deps);
+    expect(r.text?.text).toBe('你看一下这个 skill');
+    expect(r.media).toEqual([{ messageId: m.message_id, fileKey: 'file_zip', fileName: 'skill.zip' }]);
+  });
+  it('extractFilesFromPost: locale-wrapped, dedupes, ignores junk', () => {
+    expect(extractFilesFromPost({ zh_cn: { content: [], files: [{ file_key: 'k1', file_name: 'a.pptx' }] } }))
+      .toEqual([{ fileKey: 'k1', fileName: 'a.pptx' }]);
+    expect(extractFilesFromPost({ content: [], files: [{ file_key: 'k1', file_name: 'a' }, { file_key: 'k1', file_name: 'a' }, null, { file_key: 1 }] }))
+      .toEqual([{ fileKey: 'k1', fileName: 'a' }]);
+    expect(extractFilesFromPost({ content: [] })).toEqual([]);
   });
   it('image / file → media only', () => {
     const i = msg({ at: T0, type: 'image', content: { image_key: 'img_1' } });

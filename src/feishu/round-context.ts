@@ -69,6 +69,7 @@ export interface RoundContext {
 export interface RoundDeps {
   extractPostText: (content: Record<string, unknown>) => string;
   extractPostImages: (content: Record<string, unknown>) => string[];
+  extractPostFiles: (content: Record<string, unknown>) => Array<{ fileKey: string; fileName: string }>;
 }
 
 export interface RoundQuery {
@@ -143,6 +144,7 @@ export function mapMessage(m: ListedMessage, deps: RoundDeps): { text?: RoundTex
   if (m.msg_type === 'post') {
     text = deps.extractPostText(content ?? {});
     for (const key of deps.extractPostImages(content ?? {})) media.push({ messageId, imageKey: key });
+    for (const f of deps.extractPostFiles(content ?? {})) media.push({ messageId, fileKey: f.fileKey, fileName: f.fileName });
   } else {
     text = typeof content?.text === 'string' ? content.text : '';
   }
