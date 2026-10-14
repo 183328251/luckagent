@@ -14,7 +14,7 @@ import {
 } from 'antd';
 import { useProjectsRoot } from '../hooks/useProjectsRoot';
 import { api } from '../api/client';
-import type { BotEntry } from '../api/types';
+import type { BotEntry, CodexModelCatalog } from '../api/types';
 import MemberPicker from '../components/MemberPicker';
 
 const MASK_PREFIX = '••••';
@@ -43,6 +43,8 @@ export default function BotFormDrawer({
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [codexCatalog, setCodexCatalog] = useState<CodexModelCatalog>();
+  const [catalogLoading, setCatalogLoading] = useState(false);
   const projectsRoot = useProjectsRoot();
 
   useEffect(() => {
@@ -93,9 +95,17 @@ export default function BotFormDrawer({
     };
     // Edit mode: record which clearable fields the user emptied BEFORE scrub
     // removes them, then re-add them as explicit '' delete-markers.
+    const codexValues = values.codex as Record<string, unknown> | undefined;
+    const clearedCodex = editing && codexValues
+      ? ['model', 'reasoningEffort'].filter(k => k in codexValues && isEmpty(codexValues[k]))
+      : [];
     const cleared = editing ? CLEARABLE.filter((k) => k in values && isEmpty(values[k])) : [];
     scrub(payload);
     for (const k of cleared) payload[k] = '';
+    if (clearedCodex.length) {
+      payload.codex = { ...(payload.codex as Record<string, unknown> ?? {}) };
+      for (const k of clearedCodex) (payload.codex as Record<string, unknown>)[k] = '';
+    }
     return payload;
   };
 
@@ -145,6 +155,33 @@ export default function BotFormDrawer({
 
   const engine = Form.useWatch('engine', form) || 'claude';
   const botName = Form.useWatch('name', form);
+  const codexModel = Form.useWatch(['codex', 'model'], form) as string | undefined;
+
+  useEffect(() => {
+    if (!open || engine !== 'codex') return;
+    let active = true;
+    setCatalogLoading(true);
+    void api.get<CodexModelCatalog>('/admin/api/codex/models').then(result => {
+      if (active) setCodexCatalog(result);
+    }).catch(() => {
+      if (active) setCodexCatalog({ models: [], source: 'unavailable', warning: '模型列表加载失败，请重试。' });
+    }).finally(() => { if (active) setCatalogLoading(false); });
+    return () => { active = false; };
+  }, [open, engine]);
+
+  const refreshCodexModels = async () => {
+    setCatalogLoading(true);
+    try { setCodexCatalog(await api.get<CodexModelCatalog>('/admin/api/codex/models?refresh=1')); }
+    catch { message.error('模型列表刷新失败，请重试'); }
+    finally { setCatalogLoading(false); }
+  };
+  const selectedCodex = codexCatalog?.models.find(m => m.id === codexModel);
+  const codexOptions = (codexCatalog?.models ?? []).map(m => ({ value: m.id, label: m.displayName }));
+  if (codexModel && !codexOptions.some(m => m.value === codexModel)) {
+    codexOptions.unshift({ value: codexModel, label: `${codexModel}（已配置）` });
+  }
+  const efforts = selectedCodex?.reasoningEfforts.length ? selectedCodex.reasoningEfforts : ['low', 'medium', 'high', 'xhigh', 'max', 'ultra'];
+
 
   return (
     <Drawer
@@ -212,6 +249,7 @@ export default function BotFormDrawer({
                 { value: 'claude', label: 'Claude Code' },
                 { value: 'deepseek', label: 'DeepSeek' },
                 { value: 'minimax', label: 'MiniMax' },
+                { value: 'codex', label: 'GPT（Codex 订阅）' },
               ]}
             />
           </Form.Item>
@@ -219,6 +257,57 @@ export default function BotFormDrawer({
           <Form.Item label="引擎">
             <Typography.Text type="secondary">使用安装时选定的全局默认引擎（建好后可在「编辑」里按 bot 调整）</Typography.Text>
           </Form.Item>
+        )}
+
+        {editing && engine === 'codex' && (
+          <Collapse
+            size="small"
+            defaultActiveKey={['codex']}
+            items={[{
+              key: 'codex',
+              forceRender: true,
+              label: 'GPT 引擎设置（Codex 订阅）',
+              children: (
+                <>
+                  <Typography.Paragraph type="secondary">
+                    使用本机 Codex 的 ChatGPT 登录。支持多轮会话、/goal、后台任务和团队协作。
+                  </Typography.Paragraph>
+                  <Form.Item name={['codex', 'model']} label="模型">
+                    <Select
+                      allowClear
+                      showSearch
+                      optionFilterProp="label"
+                      loading={catalogLoading}
+                      placeholder="跟随本机 Codex 默认模型"
+                      options={[{ value: '', label: '跟随本机 Codex 默认模型' }, ...codexOptions]}
+                      onChange={(value) => {
+                        const supported = codexCatalog?.models.find(m => m.id === value)?.reasoningEfforts;
+                        const current = form.getFieldValue(['codex', 'reasoningEffort']);
+                        if (current && supported?.length && !supported.includes(current)) {
+                          form.setFieldValue(['codex', 'reasoningEffort'], '');
+                        }
+                      }}
+                    />
+                  </Form.Item>
+                  <Form.Item name={['codex', 'reasoningEffort']} label="推理强度">
+                    <Select
+                      allowClear
+                      placeholder="跟随 Codex 默认"
+                      options={efforts.map(value => ({ value, label: value }))}
+                    />
+                  </Form.Item>
+                  <Button size="small" onClick={() => void refreshCodexModels()} loading={catalogLoading}>
+                    刷新模型列表
+                  </Button>
+                  {codexCatalog?.warning && (
+                    <Typography.Paragraph type="warning" style={{ marginTop: 8 }}>
+                      {codexCatalog.warning}
+                    </Typography.Paragraph>
+                  )}
+                </>
+              ),
+            }]}
+          />
         )}
 
         {editing && engine === 'deepseek' && (

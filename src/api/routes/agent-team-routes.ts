@@ -255,8 +255,8 @@ function stringArrayField(value: unknown): string[] | undefined {
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string' && v.trim().length > 0).map((v) => v.trim()) : undefined;
 }
 
-function engineField(value: unknown): 'claude' | 'deepseek' | undefined {
-  return value === 'claude' || value === 'deepseek' ? value : undefined;
+function engineField(value: unknown): 'claude' | 'deepseek' | 'minimax' | 'codex' | undefined {
+  return value === 'claude' || value === 'deepseek' || value === 'minimax' || value === 'codex' ? value : undefined;
 }
 
 function taskStatusField(value: unknown): TaskStatus | undefined {

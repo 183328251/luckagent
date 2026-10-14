@@ -42,7 +42,16 @@ function loadEnvFiles(): void {
 loadEnvFiles();
 
 /** Agent engine backing a bot. */
-export type EngineName = 'claude' | 'deepseek' | 'minimax';
+export type EngineName = 'claude' | 'deepseek' | 'minimax' | 'codex';
+
+export type CodexReasoningEffort = 'low' | 'medium' | 'high' | 'xhigh' | 'max' | 'ultra';
+
+/** Local Codex CLI, authenticated with the host's ChatGPT subscription. */
+export interface CodexBotConfig {
+  executable?: string;
+  model?: string;
+  reasoningEffort?: CodexReasoningEffort;
+}
 
 /** Shared config fields used by MessageBridge and Executors (platform-agnostic). */
 export interface BotConfigBase {
@@ -80,6 +89,7 @@ export interface BotConfigBase {
   memoryPublic?: boolean;
   /** Agent engine. Defaults to 'claude' unless LUCKAGENT_ENGINE or bots.json overrides it. */
   engine?: EngineName;
+  codex?: CodexBotConfig;
   claude: {
     defaultWorkingDirectory: string;
     maxTurns: number | undefined;
@@ -256,6 +266,7 @@ export interface DeepseekJsonConfig {
 
 interface EngineJsonFields {
   engine?: EngineName;
+  codex?: CodexBotConfig;
   deepseek?: DeepseekJsonConfig;
   /** MiniMax（Anthropic 兼容端点）overrides in bots.json. Same shape as deepseek. */
   minimax?: DeepseekJsonConfig;
@@ -316,6 +327,7 @@ function feishuBotFromJson(entry: FeishuBotJsonEntry): BotConfig {
     ...(entry.groupOnly ? { groupOnly: true } : {}),
     ...(entry.groupOnlyAllowUsers?.length ? { groupOnlyAllowUsers: entry.groupOnlyAllowUsers } : {}),
     ...(entry.engine ? { engine: entry.engine } : {}),
+    ...(entry.codex ? { codex: entry.codex } : {}),
     ...(buildDeepseekConfig(entry.deepseek) ? { deepseek: buildDeepseekConfig(entry.deepseek) } : {}),
     ...(buildMinimaxConfig(entry.minimax) ? { minimax: buildMinimaxConfig(entry.minimax) } : {}),
     feishu: {
@@ -529,7 +541,7 @@ function normalizeAgentTeamConfig(team: AgentTeamConfig): AgentTeamConfig {
         .map((agent) => ({
           name: agent.name.trim(),
           ...(agent.role ? { role: agent.role } : {}),
-          ...(agent.engine === 'claude' || agent.engine === 'deepseek' ? { engine: agent.engine } : {}),
+          ...(['claude', 'deepseek', 'minimax', 'codex'].includes(agent.engine ?? '') ? { engine: agent.engine } : {}),
           ...(agent.prompt ? { prompt: agent.prompt } : {}),
           ...(agent.sessionId ? { sessionId: agent.sessionId } : {}),
           ...(agent.status === 'idle' || agent.status === 'working' || agent.status === 'stopped' ? { status: agent.status } : {}),

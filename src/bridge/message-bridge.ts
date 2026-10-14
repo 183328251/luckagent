@@ -1,3 +1,4 @@
+import { PersistentCodexExecutor, type CodexBackgroundJob } from '../engines/codex/persistent-executor.js';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -12,6 +13,8 @@ import type {
   Engine,
   Executor,
   ExecutionHandle,
+  SDKMessage,
+  ExecutorOptions,
   EngineName,
   TeamEvent,
   ApiContext,
@@ -328,9 +331,11 @@ export class MessageBridge {
       (chatId, reason) => this.releaseChatExecutor(chatId, reason),
       (chatId) => this.listSessionsForChat(chatId),
       (chatId, sessionId) => this.applyResume(chatId, sessionId),
+      (msg) => this.handleCodexCommand(msg),
     );
 
     this.outputHandler = new OutputHandler(logger, sender, this.outputsManager);
+    if (this.executor instanceof PersistentCodexExecutor) this.wireCodexExecutor(this.executor);
     // [design-note Q] 延迟清理 rm 前先补扫发送(目录名即 chatId)——
     // 后台任务晚落盘的产物不再被 5 分钟定时 rmSync 静默销毁(2026-07-30 事故)。
     this.outputsManager.setSweeper((dir) => this.outputHandler.sweepDir(path.basename(dir), dir));
@@ -397,6 +402,7 @@ export class MessageBridge {
       const executor = engine.createExecutor();
       entry = { engine, executor };
       this.engineCache.set(name, entry);
+      if (executor instanceof PersistentCodexExecutor) this.wireCodexExecutor(executor);
       this.logger.info({ engine: name, chatId }, 'Instantiated engine on demand for session override');
     }
     return entry.executor;
@@ -411,7 +417,7 @@ export class MessageBridge {
     const session = this.sessionManager.getSession(chatId);
     const engineName: EngineName = session.engine ?? resolveEngineName(this.config);
 
-    if (session.sessionId && session.sessionIdEngine && session.sessionIdEngine !== engineName) {
+    if (session.sessionId && ((session.sessionIdEngine && session.sessionIdEngine !== engineName) || (engineName === 'codex' && !session.sessionIdEngine))) {
       this.logger.info(
         { chatId, sessionIdEngine: session.sessionIdEngine, engine: engineName },
         'Clearing session id from a different engine',
@@ -419,7 +425,7 @@ export class MessageBridge {
       this.sessionManager.resetSession(chatId);
     }
 
-    if (session.model && session.modelEngine && session.modelEngine !== engineName) {
+    if (session.model && ((session.modelEngine && session.modelEngine !== engineName) || (engineName === 'codex' && !session.modelEngine))) {
       this.logger.info(
         { chatId, modelEngine: session.modelEngine, engine: engineName },
         'Clearing model override from a different engine',
@@ -438,7 +444,7 @@ export class MessageBridge {
     const session = this.sessionManager.getSession(chatId);
     const engineName = overrideEngine;
 
-    if (session.sessionId && session.sessionIdEngine && session.sessionIdEngine !== engineName) {
+    if (session.sessionId && ((session.sessionIdEngine && session.sessionIdEngine !== engineName) || (engineName === 'codex' && !session.sessionIdEngine))) {
       this.logger.info(
         { chatId, sessionIdEngine: session.sessionIdEngine, engine: engineName },
         'Clearing API session id from a different engine',
@@ -446,7 +452,7 @@ export class MessageBridge {
       this.sessionManager.resetSession(chatId);
     }
 
-    if (session.model && session.modelEngine && session.modelEngine !== engineName) {
+    if (session.model && ((session.modelEngine && session.modelEngine !== engineName) || (engineName === 'codex' && !session.modelEngine))) {
       this.logger.info(
         { chatId, modelEngine: session.modelEngine, engine: engineName },
         'Clearing API model override from a different engine',
@@ -458,6 +464,94 @@ export class MessageBridge {
       session: this.sessionManager.getSession(chatId),
       engineName,
     };
+  }
+
+  private wireCodexExecutor(executor: PersistentCodexExecutor): void {
+    executor.on('goal-updated', ({ chatId, goal }) => {
+      this.sessionManager.setGoal(chatId, goal && !['complete', 'blocked', 'budgetLimited', 'usageLimited'].includes(goal.status) ? goal.objective : undefined);
+    });
+    executor.on('turn-started', ({ options }) => {
+      if (options.outputsDir) this.outputsManager.retainDir(options.outputsDir);
+    });
+    executor.on('autonomous-result', ({ options, result, teamState }) => {
+      const chatId = options.apiContext?.chatId;
+      if (chatId) void this.deliverCodexResult(chatId, '🎯 目标进展', result, options.outputsDir, teamState).catch(err => this.logger.error({ err }, 'Codex goal delivery failed'));
+    });
+    executor.on('background-result', ({ job, result, teamState }: { job: CodexBackgroundJob; result: SDKMessage; teamState?: TeamState }) => {
+      void this.deliverCodexResult(job.chatId, `后台任务 ${job.id}：${job.prompt}`, result, job.outputsDir, teamState)
+        .then(() => executor.markDelivered(job.id)).catch(err => this.logger.error({ err }, 'Codex background delivery failed'));
+    });
+    executor.on('question', ({ chatId, request }) => {
+      if (chatId) void this.sender.sendTextNotice(chatId, '任务需要你的回答',
+        request.params.questions.map((q: any) => [q.question, ...(q.options ?? []).map((o: any, i: number) => `${i + 1}. ${o.label}`)].join('\n')).join('\n\n') + '\n\n直接回复答案即可。');
+    });
+    void executor.restore().catch(err => this.logger.error({ err }, 'Codex persistent work restore failed'));
+  }
+
+  private async deliverCodexResult(chatId: string, prompt: string, result: SDKMessage, outputsDir?: string, teamState?: TeamState): Promise<void> {
+    const state = new StreamProcessor(prompt).processMessage(result);
+    state.sessionCostUsd = 0;
+    state.teamState = teamState;
+    await this.sender.sendCard(chatId, state);
+    if (outputsDir) await this.outputHandler.sweepDir(chatId, outputsDir);
+    this.emitActivity({ type: state.status === 'complete' ? 'task_completed' : 'task_failed', botName: this.config.name,
+      chatId, userId: 'codex-background', prompt, costUsd: 0, durationMs: state.durationMs, timestamp: Date.now() });
+  }
+
+  private async handleCodexCommand(msg: IncomingMessage): Promise<boolean> {
+    const { chatId, text } = msg;
+    if ((this.sessionManager.getSession(chatId).engine ?? resolveEngineName(this.config)) !== 'codex') return false;
+    const command = text.split(/\s+/)[0].toLowerCase();
+    if (!['/goal','/background','/stop','/team','/teams','/agent','/agents'].includes(command)) return false;
+    const executor = this.executorForEngine(chatId, 'codex');
+    if (!(executor instanceof PersistentCodexExecutor)) return false;
+    const args = text.slice(command.length).trim();
+    const session = this.prepareSessionForExecution(chatId).session;
+    const options: ExecutorOptions = { prompt: '', cwd: session.workingDirectory, sessionId: session.sessionId, model: session.model,
+      outputsDir: this.outputsManager.dirFor(chatId) ?? undefined, abortController: new AbortController(), apiContext: { botName: this.config.name, chatId } };
+    try {
+      if (command === '/goal') {
+        const budgetPattern = /(?:^|\s)--budget(?:=|\s+)(\S+)(?=\s|$)/;
+        const budgetMatch = args.match(budgetPattern);
+        const cleanArgs = args.replace(budgetPattern, '').trim();
+        const lower = cleanArgs.toLowerCase();
+        const action = !cleanArgs || lower === 'status' ? 'get' : ['pause','stop'].includes(lower) ? 'pause' :
+          ['clear','off','reset','none','cancel'].includes(lower) ? 'clear' : ['resume','continue'].includes(lower) ? 'resume' : 'set';
+        const budget = budgetMatch ? Number(budgetMatch[1]) : undefined;
+        if (budget !== undefined && (!Number.isSafeInteger(budget) || budget <= 0)) throw new Error('目标 token 预算必须是正整数');
+        const objective = action === 'set' ? cleanArgs : undefined;
+        if (action === 'set' && !objective) throw new Error('请填写目标，例如 /goal 完成报告并检查数据');
+        const current = await executor.goal(options, action, objective, budget);
+        this.sessionManager.setSessionId(chatId, current.threadId, 'codex');
+        this.sessionManager.setGoal(chatId, current.goal && ['active', 'paused'].includes(current.goal.status) ? current.goal.objective : undefined);
+        await this.sender.sendTextNotice(chatId, '🎯 Codex 目标', current.goal ?
+          `${current.goal.objective}\n状态：${current.goal.status}\nToken：${current.goal.tokensUsed}${current.goal.tokenBudget ? '/' + current.goal.tokenBudget : ''}\n\n/goal pause 暂停 · /goal resume 继续 · /goal clear 清除` : '当前没有目标。');
+        if (action === 'set' && !this.isBusy(chatId)) {
+          void this.executeQuery({ ...msg, text: `执行已设置的目标：${objective}。完成后用目标工具确认完成；需要用户信息时提问。` })
+            .catch(err => this.logger.error({ err }, 'Codex goal initial turn failed'));
+        }
+      } else if (command === '/background') {
+        const [sub, id] = args.split(/\s+/);
+        if (!args || ['list','status'].includes(sub.toLowerCase())) {
+          const jobs = executor.listBackground(chatId);
+          await this.sender.sendTextNotice(chatId, '后台任务', jobs.length ? jobs.map(j => `${j.id} · ${j.status} · ${j.prompt.slice(0,80)}`).join('\n') : '暂无任务。使用 /background <任务> 启动。');
+        } else if (['stop','cancel'].includes(sub.toLowerCase())) {
+          if (!id) throw new Error('请指定任务 ID：/background stop <ID>');
+          await executor.stopBackground(id, chatId); await this.sender.sendTextNotice(chatId, '🛑 后台任务已停止', id);
+        } else {
+          const outputsDir = this.outputsManager.prepareDir(`${chatId}-background-${Date.now()}`);
+          const job = executor.startBackground({ ...options, outputsDir }, args);
+          await this.sender.sendTextNotice(chatId, '后台任务已启动', `ID：${job.id}\n${args}\n\n可以继续聊天；完成后会回传结果。/background list 查看 · /background stop ${job.id} 停止。`);
+        }
+      } else if (command === '/stop') {
+        this.clearChatQueue(chatId); this.stopTask(chatId); await executor.stopChat(chatId);
+        await this.sender.sendTextNotice(chatId, '🛑 已停止', '当前执行和本聊天后台任务已停止，活跃目标已暂停。');
+      } else {
+        if (!args) { await this.sender.sendTextNotice(chatId, 'Codex 团队', '直接描述分工，或使用 /team <任务>。Codex 会创建子 agent，执行卡片显示团队进度；跨 bot 协作用 Luckagent teams。'); }
+        else { msg.text = `用户明确请求多 agent 协作。使用 Codex 的子 agent 工具分工、等待并汇总结果。任务：${args}`; return false; }
+      }
+    } catch (error) { await this.sender.sendTextNotice(chatId, 'Codex 命令执行失败', String(error instanceof Error ? error.message : error), 'red'); }
+    return true;
   }
 
   /** Inject the doc sync service for /sync commands. */
@@ -497,10 +591,11 @@ export class MessageBridge {
 
   /** Return info about all currently running tasks (for team status display). */
   getRunningTasksInfo(): Array<{ chatId: string; startTime: number }> {
-    return Array.from(this.runningTasks.entries()).map(([chatId, task]) => ({
-      chatId,
-      startTime: task.startTime,
-    }));
+    const tasks = Array.from(this.runningTasks.entries()).map(([chatId, task]) => ({ chatId, startTime: task.startTime }));
+    for (const entry of this.engineCache.values()) if (entry.executor instanceof PersistentCodexExecutor) {
+      for (const task of entry.executor.activeWork()) if (!tasks.some(t => t.chatId === task.chatId)) tasks.push(task);
+    }
+    return tasks;
   }
 
   /** Stop a running task for the given chatId. Returns true if a task was stopped. */
@@ -589,6 +684,7 @@ export class MessageBridge {
    * reason to keep new users in the worse default any longer.
    */
   private isPersistentExecutorEnabled(): boolean {
+    if (resolveEngineName(this.config) === 'codex') return false;
     const cfg = this.config.persistentExecutor;
     if (cfg?.enabled === true) return true;
     if (cfg?.enabled === false) return false;
@@ -1324,6 +1420,7 @@ export class MessageBridge {
    * underlying Claude processes (and any teammates) terminate cleanly.
    */
   async shutdownPersistentExecutors(reason: string = 'bot-shutdown'): Promise<void> {
+    for (const entry of this.engineCache.values()) if (entry.executor instanceof PersistentCodexExecutor) await entry.executor.shutdown();
     if (this.persistentRegistry) {
       await this.persistentRegistry.shutdownAll(reason);
     }
@@ -1336,6 +1433,7 @@ export class MessageBridge {
    * No-op if persistent mode is off or chat has no executor.
    */
   async releaseChatExecutor(chatId: string, reason: string = 'reset'): Promise<void> {
+    for (const entry of this.engineCache.values()) if (entry.executor instanceof PersistentCodexExecutor) await entry.executor.resetChat(chatId);
     if (!this.persistentRegistry) return;
     await this.persistentRegistry.release(chatId, reason);
   }
@@ -1665,12 +1763,19 @@ export class MessageBridge {
       return;
     }
 
+    if (!text.startsWith('/') && (this.sessionManager.getSession(chatId).engine ?? resolveEngineName(this.config)) === 'codex') {
+      const executor = this.executorForEngine(chatId, 'codex');
+      if (executor instanceof PersistentCodexExecutor && executor.answerPending(chatId, text)) return;
+    }
+
     // Handle commands (always allowed, even during pending questions)
     if (text.startsWith('/')) {
       // Bare client-side slash commands (no argument) that we surface as a
       // selectable Feishu picker card instead of passing the argless command
       // through to the TUI (which would just open an autocomplete menu).
-      if (await this.slashPickers.tryOpen(msg)) return;
+      const codexCommand = (this.sessionManager.getSession(chatId).engine ?? resolveEngineName(this.config)) === 'codex' &&
+        /^\/(goal|background|agent|agents|team|teams)(\s|$)/i.test(text);
+      if (!codexCommand && await this.slashPickers.tryOpen(msg)) return;
 
       const handled = await this.commandHandler.handle(msg);
       if (handled) return;
@@ -2188,8 +2293,12 @@ export class MessageBridge {
 
     // Prepare per-chat outputs directory
     // [design-note Q] 清空前先补扫:残留 = 漏发文件(发过即删),先发出去再清
-    await this.outputHandler.sweepDir(chatId, this.outputsManager.dirFor(chatId));
-    const outputsDir = this.outputsManager.prepareDir(chatId);
+    const codexWorker = engineName === 'codex' ? this.executorForEngine(chatId, 'codex') : undefined;
+    const steerCodex = codexWorker instanceof PersistentCodexExecutor && codexWorker.hasActiveMainTurn(chatId);
+    if (!steerCodex) await this.outputHandler.sweepDir(chatId, this.outputsManager.dirFor(chatId));
+    const outputsDir = steerCodex
+      ? this.outputsManager.retainDir(this.outputsManager.dirFor(chatId)!)
+      : this.outputsManager.prepareDir(chatId);
 
     // Send initial "thinking" card
     const mediaCount = 1 + (msg.extraMedia?.length || 0);
@@ -2810,8 +2919,12 @@ export class MessageBridge {
     }
 
     // [design-note Q] 清空前先补扫:残留 = 漏发文件(发过即删),先发出去再清
-    await this.outputHandler.sweepDir(chatId, this.outputsManager.dirFor(chatId));
-    const outputsDir = this.outputsManager.prepareDir(chatId);
+    const codexWorker = engineName === 'codex' ? this.executorForEngine(chatId, 'codex') : undefined;
+    const steerCodex = codexWorker instanceof PersistentCodexExecutor && codexWorker.hasActiveMainTurn(chatId);
+    if (!steerCodex) await this.outputHandler.sweepDir(chatId, this.outputsManager.dirFor(chatId));
+    const outputsDir = steerCodex
+      ? this.outputsManager.retainDir(this.outputsManager.dirFor(chatId)!)
+      : this.outputsManager.prepareDir(chatId);
 
     const displayPrompt = prompt;
     const processor = new StreamProcessor(displayPrompt);
@@ -3375,10 +3488,11 @@ export class MessageBridge {
     // flushes per-executor buffers. Return its promise so an awaiting caller
     // (destroyAsync) can let in-flight teardown finish before the process
     // exits; the legacy sync destroy() fire-and-forgets it.
-    if (this.persistentRegistry) {
-      return this.persistentRegistry.shutdownAll('bridge-destroy');
-    }
-    return Promise.resolve();
+    return Promise.all([
+      this.persistentRegistry?.shutdownAll('bridge-destroy'),
+      ...[...this.engineCache.values()].filter(e => e.executor instanceof PersistentCodexExecutor)
+        .map(e => (e.executor as PersistentCodexExecutor).shutdown()),
+    ]).then(() => {});
   }
 
   /**

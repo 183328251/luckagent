@@ -2,6 +2,7 @@ import type { BotConfigBase } from '../config.js';
 import type { Logger } from '../utils/logger.js';
 import type { Engine, EngineName } from './types.js';
 import { ClaudeEngine } from './claude/index.js';
+import { CodexEngine } from './codex/index.js';
 import { COMPAT_PROVIDERS, compatProviderFor } from './claude/auth-env.js';
 
 /**
@@ -19,6 +20,8 @@ export function createEngine(
 ): Engine {
   const name = override ?? resolveEngineName(config);
   switch (name) {
+    case 'codex':
+      return new CodexEngine({ ...config, engine: 'codex' }, logger);
     case 'claude':
       // Pin the engine field to the RESOLVED name: a session override
       // (/model claude on a deepseek bot) must not inherit the bot-level
@@ -70,7 +73,7 @@ export function resolveEngineName(config: BotConfigBase): EngineName {
   const explicit = config.engine;
   if (explicit) return explicit;
   const envDefault = process.env.LUCKAGENT_ENGINE as EngineName | undefined;
-  if (envDefault === 'claude' || envDefault === 'deepseek' || envDefault === 'minimax') return envDefault;
+  if (envDefault === 'claude' || envDefault === 'deepseek' || envDefault === 'minimax' || envDefault === 'codex') return envDefault;
   return 'claude';
 }
 

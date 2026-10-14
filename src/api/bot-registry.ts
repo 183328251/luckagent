@@ -100,6 +100,8 @@ export class BotRegistry {
 
 function defaultModelForEngine(config: BotConfigBase): string | undefined {
   switch (resolveEngineName(config)) {
+    case 'codex':
+      return config.codex?.model;
     case 'claude':
       return config.claude.model;
     case 'deepseek':

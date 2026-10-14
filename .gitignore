@@ -33,5 +33,8 @@ __pycache__/
 !.claude/skills/frontend-design
 .codex/
 
+# Local deployment backups contain machine configuration and conversation state
+.backups/
+
 # Per-engine project instructions — CLAUDE.md is canonical, AGENTS.md is the codex-engine mirror kept local-only
 AGENTS.md

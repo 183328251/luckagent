@@ -47,6 +47,7 @@ export class CommandHandler {
      * resumes via `claude --resume`. Backs both `/resume` forms.
      */
     private applyResume: (chatId: string, sessionId: string) => Promise<void>,
+    private handleEngineCommand: (msg: IncomingMessage) => Promise<boolean> = async () => false,
   ) {}
 
   /** Set the doc sync service (optional, only available for Feishu bots). */
@@ -64,6 +65,7 @@ export class CommandHandler {
 
     this.audit.log({ event: 'command', botName: this.config.name, chatId, userId, prompt: cmd });
 
+    if (await this.handleEngineCommand(msg)) return true;
     switch (cmd.toLowerCase()) {
       case '/help':
         await this.sender.sendTextNotice(chatId, '📖 Help', [
@@ -72,7 +74,7 @@ export class CommandHandler {
           '`/stop` - Abort current running task',
           '`/status` - Show current session info',
           '`/model` - Show current engine/model; `/model list` - Available options',
-          '`/model claude`, `/model deepseek`, or `/model minimax` - Switch engine (resets session)',
+          '`/model claude`, `/model deepseek`, `/model minimax`, or `/model codex` - Switch engine (resets session)',
           '`/model <name>` - Set model for current engine',
           '`/resume` - List & switch to a previous Claude session (Claude only)',
           '`/resume <id>` - Resume a session directly by id prefix',
@@ -340,7 +342,7 @@ export class CommandHandler {
         '',
         'Usage:',
         '- `/model list` — Show available engines + models',
-        '- `/model claude`, `/model deepseek`, or `/model minimax` — Switch engine (resets session)',
+        '- `/model claude`, `/model deepseek`, `/model minimax`, or `/model codex` — Switch engine (resets session)',
         `- \`/model <name>\` — Set session model (e.g. ${exampleModels})`,
         '- `/model reset` — Clear overrides, use bot defaults',
       ];
@@ -377,6 +379,11 @@ export class CommandHandler {
     }
 
     // List available models
+    if ((normalized === 'list' || normalized === 'ls') && activeEngine === 'codex') {
+      await this.sender.sendTextNotice(chatId, 'GPT（Codex 订阅）',
+        `当前模型：${session.model || botDefault || '跟随本机 Codex 默认'}。\n使用 /model <模型 ID> 设置，/model reset 恢复 bot 默认。\n模型可用性以本机 Codex 登录账号为准。`);
+      return;
+    }
     if (normalized === 'list' || normalized === 'ls') {
       const active = session.model || botDefault;
       const claudeModels = [
@@ -410,7 +417,7 @@ export class CommandHandler {
       const lines = [
         `**Current engine:** \`${activeEngine}\`${session.engine ? ' (session override)' : ''}`,
         '',
-        '**Engines:** `/model claude`, `/model deepseek`, or `/model minimax` to switch.',
+        '**Engines:** `/model claude`, `/model deepseek`, `/model minimax`, or `/model codex` to switch.',
         '',
         header,
         '',
@@ -542,6 +549,8 @@ export class CommandHandler {
 
   private defaultModelForEngine(engine: EngineName): string | undefined {
     switch (engine) {
+      case 'codex':
+        return this.config.codex?.model;
       case 'claude':
         return this.config.claude.model;
       case 'deepseek':
@@ -553,6 +562,8 @@ export class CommandHandler {
 
   private exampleModelsForEngine(engine: EngineName): string {
     switch (engine) {
+      case 'codex':
+        return '使用本机 Codex 可用模型，留空跟随 Codex 默认';
       case 'claude':
         return '`claude-fable-5`, `claude-opus-5`, `claude-sonnet-5`, `claude-haiku-4-5`';
       case 'deepseek':
@@ -564,6 +575,8 @@ export class CommandHandler {
 
   private authTipForEngine(engine: EngineName): string {
     switch (engine) {
+      case 'codex':
+        return '_使用本机 Codex 的 ChatGPT 登录（`codex login`）。支持 /goal、后台任务、子 agent 与执行中问答。_';
       case 'claude':
         return '_Make sure Claude Code is authenticated (`claude login`)._';
       case 'deepseek':
@@ -575,5 +588,5 @@ export class CommandHandler {
 }
 
 function isEngineName(value: string): value is EngineName {
-  return value === 'claude' || value === 'deepseek' || value === 'minimax';
+  return value === 'claude' || value === 'deepseek' || value === 'minimax' || value === 'codex';
 }

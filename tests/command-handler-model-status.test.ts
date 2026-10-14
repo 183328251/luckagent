@@ -223,11 +223,17 @@ describe('CommandHandler /model', () => {
 
   it('rejects unknown engines as model names, not engine switches', async () => {
     const { handler, getSessionEngine, getSessionModel } = buildHandler({ engine: 'claude' });
-    await handler.handle(msg('/model codex'));
-    // 'codex' is no longer an engine — it falls through to the model setter,
-    // leaving the seeded engine override untouched.
+    await handler.handle(msg('/model unknown-engine'));
+    // Unknown names still fall through to the model setter.
     expect(getSessionEngine()).toBe('claude');
-    expect(getSessionModel()).toBe('codex');
+    expect(getSessionModel()).toBe('unknown-engine');
+  });
+
+  it('switches to Codex and explains the subscription login', async () => {
+    const { handler, notices, getSessionEngine } = buildHandler({ engine: 'claude' });
+    await handler.handle(msg('/model codex'));
+    expect(getSessionEngine()).toBe('codex');
+    expect(notices.at(-1)?.content).toContain('codex login');
   });
 
   it('switches engine to claude on /model claude', async () => {

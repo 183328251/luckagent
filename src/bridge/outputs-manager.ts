@@ -65,6 +65,17 @@ export class OutputsManager {
     return dir;
   }
 
+  /** Keep a persistent worker's send directory without deleting in-flight files. */
+  retainDir(outputsDir: string): string {
+    const root = path.resolve(this.baseDir);
+    const dir = resolveWithinRoot(root, outputsDir);
+    if (!dir || dir === root) throw new Error('Output path is outside the outputs root');
+    const timer = this.pendingCleanups.get(dir);
+    if (timer) { clearTimeout(timer); this.pendingCleanups.delete(dir); }
+    fs.mkdirSync(dir, { recursive: true });
+    return dir;
+  }
+
   /** Scan the outputs directory and return metadata for each file found. */
   scanOutputs(outputsDir: string): OutputFile[] {
     const results: OutputFile[] = [];

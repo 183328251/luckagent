@@ -8,7 +8,7 @@ import { COMPAT_PROVIDERS, DEEPSEEK_KNOWN_MODELS } from '../engines/claude/auth-
  * generic ".env editor" (API_SECRET, API keys, ports stay terminal-only).
  * An empty string always means "unset": the built-in default applies.
  */
-export const ENGINE_VALUES = ['claude', 'deepseek', 'minimax'] as const;
+export const ENGINE_VALUES = ['claude', 'deepseek', 'minimax', 'codex'] as const;
 export const IMAGE_GEN_VALUES = ['codex', 'seedream'] as const;
 
 // Model ids like claude-opus-5, claude-fable-5-1[1m], us.anthropic.claude-…:0

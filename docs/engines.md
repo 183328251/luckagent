@@ -86,3 +86,42 @@ MiniMax 同样提供 **Anthropic 兼容端点**（`https://api.minimaxi.com/anth
 | MiniMax | **无**——只要申请个 key | `.env` 或管理台子表单 |
 
 `luckagent doctor --json` 可核对运行时、PM2、bots、语音、生图等检查项。
+
+
+## GPT（Codex 订阅，基础版）
+
+新增独立的 `codex` 引擎，使用本机 `codex` CLI 的 ChatGPT 登录，不经过 Claude 运行时。
+先安装 CLI 并运行 `codex login`，用 `codex login status` 确认登录。
+在管理台机器人编辑中选择「GPT（Codex 订阅）」，展开 GPT 引擎设置，从下拉列表选择模型与该模型支持的推理强度；可点击「刷新模型列表」更新本机 Codex 模型目录。模型是否可调用仍以登录账号和实际请求为准。
+`bots.json` 示例：
+
+```json
+{"name":"tiger","engine":"codex","codex":{"reasoningEffort":"medium"}}
+```
+
+模型留空跟随本机 Codex 默认，也可设置 `codex.model`。原有顶层 `model` 是 Claude 配置，不用于 Codex。
+支持文本、多轮续接、工具状态、图片输入、文件回传和 `/stop`；`/model codex` 可临时切换，
+切换时会开始新会话。旧 Claude 会话不会被 Codex 续接。
+
+执行权限为 `workspace-write`，可写 bot 工作目录与本次输出目录，允许网络访问；CLI 无交互审批。
+不使用 `--dangerously-bypass-approvals-and-sandbox`。引擎排除继承的 OpenAI API Key 与 API 地址，
+强制使用 ChatGPT 登录；生图与语音 API 配置不变。
+
+Codex 使用独立的常驻 App Server，原有 `codex exec` 会话可通过线程 ID 续接。
+支持 `/goal <目标>`、`/goal status|pause|resume|clear`；可用 `--budget <token 数>` 指定预算。
+目标由 Codex 原生目标调度执行，进度回传飞书；`/stop` 停止本聊天当前执行及后台任务，并暂停活跃目标。
+支持 `/background <任务>`、`/background list`、`/background stop <ID>`，后台任务使用独立会话，普通聊天可继续。
+目标与后台任务状态保存到 `<SESSION_STORE_DIR>/codex-work-<bot>.json`；重启时恢复活跃目标与未完成后台任务。
+后台恢复会沿用原会话；执行外部操作的任务仍需检查恢复后的结果，不能把进程恢复等同于事务回滚。
+`/team <任务>` 或自然语言明确要求分工可使用 Codex 子 agent，执行卡片展示团队事件。
+Luckagent 自身团队成员也可选择 `codex`，与 Claude / DeepSeek / MiniMax 混合协作。
+Bot 自身继续通过 `AGENTS.md` 链接共用 `CLAUDE.md`；Codex 适配层明确加载用户/祖先目录的共用 `CLAUDE.md`，无需维护两份规则。
+手动 `/resume` 历史选择器仍为 Claude 专用；Codex 日常对话与持久工作自动续接。
+指定 `allowedTools` / `maxTurns` 的受限 API 任务会明确报错，不会静默忽略限制。
+卡片页脚从本机会话记录读取实际模型、最近一次推理的上下文用量与窗口大小。费用固定显示 `$0.00`。
+订阅额度以账号为准；界面中的零美元不代表订阅没有费用。
+Codex 可以读取 bot 的 `AGENTS.md`，并在逐回合提示中发现用户与 bot 的 `.claude/skills`；
+Codex 自己的原生 skills 仍按其 CLI 配置加载。
+
+试用时只设置测试 bot 的引擎，保留 `LUCKAGENT_ENGINE` 和其他 bot 配置。
+回退测试 bot 时将 `engine` 改回 `claude` 并重启桥接，原有顶层 Claude 模型配置仍保留。

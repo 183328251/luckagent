@@ -30,7 +30,8 @@ export interface Overview {
 export interface BotEntry {
   name: string;
   description?: string;
-  engine?: 'claude' | 'deepseek' | 'minimax';
+  engine?: 'claude' | 'deepseek' | 'minimax' | 'codex';
+  codex?: { executable?: string; model?: string; reasoningEffort?: CodexReasoningEffort };
   feishuAppId?: string;
   feishuAppSecret?: string;
   defaultWorkingDirectory?: string;
@@ -140,4 +141,18 @@ export interface CodexProbe {
   loggedIn: boolean;
   version: string | null;
   detail: string;
+}
+
+
+export type CodexReasoningEffort = 'low' | 'medium' | 'high' | 'xhigh' | 'max' | 'ultra';
+export interface CodexModelOption {
+  id: string;
+  displayName: string;
+  reasoningEfforts: CodexReasoningEffort[];
+  defaultReasoningEffort?: CodexReasoningEffort;
+}
+export interface CodexModelCatalog {
+  models: CodexModelOption[];
+  source: 'codex' | 'cache' | 'unavailable';
+  warning?: string;
 }

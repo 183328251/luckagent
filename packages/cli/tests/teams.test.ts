@@ -31,7 +31,7 @@ function calls(fetchMock: typeof fetch): [string, RequestInit][] {
 }
 
 describe('luckagent teams CLI ergonomics', () => {
-  it('agents spawn defaults new teammates to Codex', async () => {
+  it('agents spawn inherits the bot engine unless explicitly selected', async () => {
     const fetchMock = vi.fn(async () => jsonResponse({ name: 'worker', engine: 'codex' })) as unknown as typeof fetch;
     vi.stubGlobal('fetch', fetchMock);
     vi.spyOn(process.stdout, 'write').mockReturnValue(true);
@@ -46,8 +46,17 @@ describe('luckagent teams CLI ergonomics', () => {
     expect(JSON.parse(String(init.body))).toMatchObject({
       name: 'worker',
       role: 'runtime',
-      engine: 'codex',
     });
+    expect(JSON.parse(String(init.body))).not.toHaveProperty('engine');
+  });
+
+  it('agents spawn honors an explicit Codex engine', async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({ name: 'worker', engine: 'codex' })) as unknown as typeof fetch;
+    vi.stubGlobal('fetch', fetchMock);
+    vi.spyOn(process.stdout, 'write').mockReturnValue(true);
+    const mod = await importFresh();
+    await mod.run(['agents', 'spawn', 'demo', 'worker', '--engine', 'codex']);
+    expect(JSON.parse(String(calls(fetchMock)[0]![1].body)).engine).toBe('codex');
   });
 
   it('dispatch creates an assigned task and sends a start message', async () => {

@@ -23,7 +23,7 @@ teammates unless you send it through the team mailbox.
 
 ```bash
 luckagent teams create <team> --description "..."
-luckagent teams agents spawn <team> <name> --role <role> --prompt "..."  # engine defaults to codex
+luckagent teams agents spawn <team> <name> --role <role> --prompt "..."  # engine defaults to the owning bot
 luckagent teams dispatch <team> <name> "<subject>" --description "..." --plain
 luckagent teams next <team> <name> --summary
 luckagent teams runs list <team>
@@ -33,7 +33,7 @@ luckagent teams status <team> --summary
 Lead rules:
 - Keep the team task list current.
 - Prefer `luckagent teams dispatch` over separate `tasks create` + `tasks update --owner` + `send`; it creates the task, assigns the owner, and wakes the teammate in one command.
-- Use `agents spawn` without `--engine` for Codex teammates. Pass `--engine claude|kimi` only when a teammate specifically needs another engine.
+- Use `agents spawn` without `--engine` to inherit the owning bot engine. Pass `--engine codex|claude|deepseek|minimax` to select a different engine explicitly.
 - Use `next` to inspect a teammate's unread messages and open assigned tasks before deciding whether to send more work.
 - Integrate completed work before reporting to the user.
 - Stop or delete the team when the work is done.

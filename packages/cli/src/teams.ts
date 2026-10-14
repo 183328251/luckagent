@@ -93,7 +93,7 @@ Subcommands:
   watch <team> [--interval <sec>] [--count <n>] [--summary|--plain]
 
   agents list <team>
-  agents spawn <team> <name> [--role <role>] [--engine claude|codex|kimi] [--prompt <text>]
+  agents spawn <team> <name> [--role <role>] [--engine claude|deepseek|minimax|codex] [--prompt <text>]
   agents stop <team> <name>
   agents delete <team> <name>
 
@@ -366,7 +366,7 @@ async function runAgents(cfg: BridgeConfig, argv: string[]): Promise<void> {
     print(await bridgeRequest(cfg, 'POST', `/api/agent-teams/${encodeURIComponent(team)}/agents`, {
       name,
       role: stringFlag(flags, 'role'),
-      engine: stringFlag(flags, 'engine') ?? 'codex',
+      engine: stringFlag(flags, 'engine'),
       prompt: stringFlag(flags, 'prompt'),
     }));
     return;

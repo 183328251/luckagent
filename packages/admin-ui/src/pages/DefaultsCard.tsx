@@ -26,7 +26,7 @@ interface FormValues {
   TOS_SECRET_KEY?: string;
 }
 
-const ENGINE_LABEL: Record<string, string> = { claude: 'Claude Code', deepseek: 'DeepSeek', minimax: 'MiniMax' };
+const ENGINE_LABEL: Record<string, string> = { claude: 'Claude Code', deepseek: 'DeepSeek', minimax: 'MiniMax', codex: 'GPT（Codex 订阅）' };
 const IMAGE_GEN_LABEL: Record<string, string> = { '': '自动（Codex 优先）', codex: 'Codex（ChatGPT 订阅）', seedream: '火山 Seedream' };
 
 function toForm(d: ConfigDefaults): FormValues {
