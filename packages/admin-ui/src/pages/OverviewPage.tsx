@@ -545,7 +545,7 @@ export default function OverviewPage({
       {tiles}
       <Row gutter={[16, 16]} align="stretch">
         <Col xs={24} lg={12}>
-          <Card title="Claude 订阅额度" size="small" style={{ height: '100%', minHeight: 200 }} />
+          <SubscriptionUsageCard engine="claude" />
         </Col>
         <Col xs={24} lg={12}><SubscriptionUsageCard /></Col>
       </Row>

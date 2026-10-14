@@ -56,13 +56,13 @@ function QuotaWindow({ value, fallback }: { value: Window | null; fallback: stri
     </div>
   );
 }
-export function SubscriptionUsageCard() {
+export function SubscriptionUsageCard({ engine = 'codex' }: { engine?: 'codex' | 'claude' }) {
   const forceRefresh = useRef(false);
   const {
     data: usage,
     error,
     refresh,
-  } = usePoll<Usage>(() => api.get(`/admin/api/codex/usage${forceRefresh.current ? '?refresh=1' : ''}`), 180000);
+  } = usePoll<Usage>(() => api.get(`/admin/api/${engine}/usage${forceRefresh.current ? '?refresh=1' : ''}`), 180000);
   const [loading, setLoading] = useState(false);
   const reload = async () => {
     setLoading(true);
@@ -76,7 +76,8 @@ export function SubscriptionUsageCard() {
   };
   return (
     <Card
-      title="GPT 订阅额度"
+      title={engine === 'claude' ? 'Claude 订阅额度' : 'GPT 订阅额度'}
+      style={{ height: '100%' }}
       size="small"
       loading={!usage && !error}
       extra={
@@ -109,7 +110,7 @@ export function SubscriptionUsageCard() {
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无订阅额度数据" />
         )}
         <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-          账号共享额度 · 免费重置机会：{usage?.resetCredits ?? '未提供'} ·{' '}
+          账号共享额度 · {engine === 'codex' && <>免费重置机会：{usage?.resetCredits ?? '未提供'} · </>}
           {usage?.checkedAt ? `查询于 ${time(usage.checkedAt)}` : '尚未查询成功'} · 北京时间
         </Typography.Text>
       </Space>

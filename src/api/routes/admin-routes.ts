@@ -1,3 +1,4 @@
+import { getClaudeSubscriptionUsage } from '../../engines/claude/subscription-usage.js';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -910,6 +911,12 @@ export async function handleAdminRoutes(
     // keys only — values may be secrets (ARK / TOS keys)
     logger.info({ keys: Object.keys(result.updates) }, 'admin: global defaults written to .env');
     jsonResponse(res, 200, { saved: Object.keys(result.updates), requiresRestart: true, runningTasks });
+    return true;
+  }
+
+  if (method === 'GET' && (url === '/admin/api/claude/usage' || url.startsWith('/admin/api/claude/usage?'))) {
+    const parsed = new URL(url, 'http://localhost');
+    jsonResponse(res, 200, await getClaudeSubscriptionUsage(parsed.searchParams.get('refresh') === '1'));
     return true;
   }
 

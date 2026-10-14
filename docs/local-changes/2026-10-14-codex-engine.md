@@ -103,6 +103,14 @@
 
 后续界面调整：进度条填充表示**已使用额度**，标题同时显示已用和剩余百分比；使用量达到 75% / 90% 时变黄 / 红，避免把剩余量误读成消耗进度。
 
+### 后续：Claude 订阅额度
+
+左侧卡片已接入 Claude，复用 `SubscriptionUsageCard` 的展示组件，以 `engine="claude"` 选择 `GET /admin/api/claude/usage`。右侧 GPT 保持原接口；Claude 不显示免费重置次数。
+
+新增 `src/engines/claude/subscription-usage.ts`：在 `SESSION_STORE_DIR` 或 `~/.luckagent` 下专用查询目录启动独立 Claude Code PTY，以屏幕阅读模式执行 `/usage`，通过 headless xterm 处理终端重绘，只提取订阅类型、当前 5 小时和所有模型每周额度。关闭 hooks、工具和 MCP，移除 API key/第三方 provider 环境覆盖，使用本机 Claude 订阅登录；强制 `TZ=Asia/Shanghai`，查询完成或 30 秒超时后终止自有进程，不接触 bot 会话。普通缓存 2 分钟、手动刷新最短间隔 10 秒、并发去重；失败保留上次结果，不记录或返回完整终端文本、账号信息及本地技能统计。
+
+实测 Claude Code 2.1.299：Pro，5 小时已用 17%，每周已用 41%，重置时间正常。`tests/claude-subscription-usage.test.ts` 新增 4 例，覆盖额度提取、未知时区/缺失窗口、跨天/跨年及缓存失败保留；与 Codex 额度、管理台路由共 23 例通过。实际查询为交互式文本解析，不是稳定结构化 API；升级 Claude CLI 时须复测标题、日期格式、刷新完成提示、就绪提示和进程退出。解析失败显示不可用或旧结果，不能悄悄当作零使用量。
+
 1. 更新前备份代码、构建产物、配置及运行状态。先保存或提交本地实现、未跟踪的 `src/engines/codex/` 和新增测试；只保存 `git diff` 会遗漏未跟踪文件。备份中的配置/会话可能含敏感数据，不应提交上游。
 2. 以 `e7c63db` 为本次上游基线，比较新上游的引擎接口、桥接执行/停止/重置/输出生命周期、团队校验和管理台设置。不要直接用旧版本整文件覆盖新上游。
 3. 优先解决 `message-bridge.ts`、`command-handler.ts`、`config.ts`、引擎类型/注册、管理台表单的冲突；保留上游容量检查、队列、认证、附件、输出清理等修复，同时按有效引擎接入 Codex。
