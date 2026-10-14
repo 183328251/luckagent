@@ -543,7 +543,12 @@ export default function OverviewPage({
       )}
       {statusBar}
       {tiles}
-      <SubscriptionUsageCard />
+      <Row gutter={[16, 16]} align="stretch">
+        <Col xs={24} lg={12}>
+          <Card title="Claude 订阅额度" size="small" style={{ height: '100%', minHeight: 200 }} />
+        </Col>
+        <Col xs={24} lg={12}><SubscriptionUsageCard /></Col>
+      </Row>
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={10}>{attentionCard}</Col>
         <Col xs={24} xl={14}>{feedCard}</Col>
