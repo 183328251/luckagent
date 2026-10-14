@@ -16,6 +16,7 @@ import { MEMORY_INDEX_LIMITS, parseMemoryFrontmatter, readBotMemory, searchMemor
 
 export { parseMemoryIndex, type MemoryIndexEntry } from '../memory-view.js';
 import { getCodexModelCatalog } from '../../engines/codex/model-catalog.js';
+import { getSubscriptionUsage } from '../../engines/codex/subscription-usage.js';
 import { jsonResponse, parseJsonBody } from './helpers.js';
 import type { RouteContext } from './types.js';
 
@@ -909,6 +910,13 @@ export async function handleAdminRoutes(
     // keys only — values may be secrets (ARK / TOS keys)
     logger.info({ keys: Object.keys(result.updates) }, 'admin: global defaults written to .env');
     jsonResponse(res, 200, { saved: Object.keys(result.updates), requiresRestart: true, runningTasks });
+    return true;
+  }
+
+  // Read-only account quota; protected by the same admin Bearer check.
+  if (method === 'GET' && (url === '/admin/api/codex/usage' || url.startsWith('/admin/api/codex/usage?'))) {
+    const parsed = new URL(url, 'http://localhost');
+    jsonResponse(res, 200, await getSubscriptionUsage(logger, parsed.searchParams.get('refresh') === '1'));
     return true;
   }
 

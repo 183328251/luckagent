@@ -7,6 +7,7 @@ import { api } from '../api/client';
 import { usePoll } from '../hooks/usePoll';
 import type { Overview, BotOverview } from '../api/types';
 import { Sparkline } from '../components/Sparkline';
+import { SubscriptionUsageCard } from '../components/SubscriptionUsageCard';
 import { MarkdownView } from '../md';
 
 interface AttentionItem { key: string; level: 'error' | 'warning'; title: string; detail?: string; link?: string; }
@@ -542,6 +543,7 @@ export default function OverviewPage({
       )}
       {statusBar}
       {tiles}
+      <SubscriptionUsageCard />
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={10}>{attentionCard}</Col>
         <Col xs={24} xl={14}>{feedCard}</Col>
