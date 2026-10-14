@@ -40,7 +40,10 @@ describe('Claude subscription quota', () => {
       await Promise.all([read(), read()]);
       await read(true);
       expect(query).toHaveBeenCalledTimes(1);
-      vi.advanceTimersByTime(120001);
+      vi.advanceTimersByTime(1800000);
+      await read();
+      expect(query).toHaveBeenCalledTimes(1);
+      vi.advanceTimersByTime(1800001);
       const r = await read();
       expect(r.stale).toBe(true);
       expect(r.buckets[0].primary?.usedPercent).toBe(17);

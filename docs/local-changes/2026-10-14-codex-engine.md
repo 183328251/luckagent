@@ -95,7 +95,7 @@
 
 系统总览新增 `packages/admin-ui/src/components/SubscriptionUsageCard.tsx`，由 `OverviewPage.tsx` 引入。后端 `src/engines/codex/subscription-usage.ts` 通过原生 `account/rateLimits/read` 查询，`admin-routes.ts` 增加已认证的 `GET /admin/api/codex/usage`（`?refresh=1` 手动刷新）。
 
-展示账号共享额度而非单 bot 用量；保留原生多额度桶和实际窗口长度，显示剩余/已用百分比、订阅类型、北京时间重置时间、免费重置机会和上次成功查询时间。页面每 3 分钟轮询，隐藏标签页暂停；后端普通缓存 2 分钟，手动刷新最短间隔 10 秒，并发查询共用一次请求。查询最长等待 15 秒，失败保留旧快照并明确标记，未知额度不当作 0% 使用。
+展示账号共享额度而非单 bot 用量；保留原生多额度桶和实际窗口长度，显示剩余/已用百分比、订阅类型、北京时间重置时间、免费重置机会和上次成功查询时间。页面每 1 小时轮询，隐藏标签页暂停；后端普通缓存 1 小时，手动刷新最短间隔 10 秒，并发查询共用一次请求。查询最长等待 15 秒，失败保留旧快照并明确标记，未知额度不当作 0% 使用。
 
 仅返回白名单展示字段，不返回账号标识、邮箱、登录凭证或重置机会 ID；没有消费重置机会的接口或按钮。每次查询创建临时只读 App Server 连接，完成后关闭，不干扰 bot 的持久执行连接。新增 `tests/codex-subscription-usage.test.ts` 5 例，覆盖字段过滤、多桶、缓存与并发、失败保留、缺失额度；与管理台路由测试共 19 例通过，前后端编译及前端构建通过。Claude 订阅额度卡片留待后续评估，本次未实现。
 
@@ -107,7 +107,7 @@
 
 左侧卡片已接入 Claude，复用 `SubscriptionUsageCard` 的展示组件，以 `engine="claude"` 选择 `GET /admin/api/claude/usage`。右侧 GPT 保持原接口；Claude 不显示免费重置次数。
 
-新增 `src/engines/claude/subscription-usage.ts`：在 `SESSION_STORE_DIR` 或 `~/.luckagent` 下专用查询目录启动独立 Claude Code PTY，以屏幕阅读模式执行 `/usage`，通过 headless xterm 处理终端重绘，只提取订阅类型、当前 5 小时和所有模型每周额度。关闭 hooks、工具和 MCP，移除 API key/第三方 provider 环境覆盖，使用本机 Claude 订阅登录；强制 `TZ=Asia/Shanghai`，查询完成或 30 秒超时后终止自有进程，不接触 bot 会话。普通缓存 2 分钟、手动刷新最短间隔 10 秒、并发去重；失败保留上次结果，不记录或返回完整终端文本、账号信息及本地技能统计。
+新增 `src/engines/claude/subscription-usage.ts`：在 `SESSION_STORE_DIR` 或 `~/.luckagent` 下专用查询目录启动独立 Claude Code PTY，以屏幕阅读模式执行 `/usage`，通过 headless xterm 处理终端重绘，只提取订阅类型、当前 5 小时和所有模型每周额度。关闭 hooks、工具和 MCP，移除 API key/第三方 provider 环境覆盖，使用本机 Claude 订阅登录；强制 `TZ=Asia/Shanghai`，查询完成或 30 秒超时后终止自有进程，不接触 bot 会话。普通缓存 1 小时、手动刷新最短间隔 10 秒、并发去重；失败保留上次结果，不记录或返回完整终端文本、账号信息及本地技能统计。
 
 实测 Claude Code 2.1.299：Pro，5 小时已用 17%，每周已用 41%，重置时间正常。`tests/claude-subscription-usage.test.ts` 新增 4 例，覆盖额度提取、未知时区/缺失窗口、跨天/跨年及缓存失败保留；与 Codex 额度、管理台路由共 23 例通过。实际查询为交互式文本解析，不是稳定结构化 API；升级 Claude CLI 时须复测标题、日期格式、刷新完成提示、就绪提示和进程退出。解析失败显示不可用或旧结果，不能悄悄当作零使用量。
 

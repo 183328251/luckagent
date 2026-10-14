@@ -163,7 +163,7 @@ export function createClaudeUsageReader(query = queryClaudeUsage) {
   let inFlight: Promise<SubscriptionUsage> | undefined;
   return async (refresh = false): Promise<SubscriptionUsage> => {
     if (inFlight) return inFlight;
-    if (snapshot && Date.now() - lastAttempt < (refresh ? 10000 : 120000)) return snapshot;
+    if (snapshot && Date.now() - lastAttempt < (refresh ? 10000 : 3600000)) return snapshot;
     lastAttempt = Date.now();
     inFlight = query().catch(() => ({
       ...(snapshot || { checkedAt: null, buckets: [], resetCredits: null }),

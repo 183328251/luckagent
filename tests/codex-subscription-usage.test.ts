@@ -42,7 +42,10 @@ describe('subscription quota display', () => {
       const call = vi.fn().mockResolvedValueOnce(raw).mockRejectedValueOnce(new Error('secret-token'));
       const reader = createSubscriptionUsageReader(() => ({ call, close: async () => {} }));
       const good = await reader({} as any);
-      vi.advanceTimersByTime(120001);
+      vi.advanceTimersByTime(1800000);
+      await reader({} as any);
+      expect(call).toHaveBeenCalledTimes(1);
+      vi.advanceTimersByTime(1800001);
       const stale = await reader({} as any);
       expect(stale.stale).toBe(true);
       expect(stale.checkedAt).toBe(good.checkedAt);

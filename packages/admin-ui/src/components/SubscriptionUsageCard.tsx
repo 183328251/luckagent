@@ -62,7 +62,7 @@ export function SubscriptionUsageCard({ engine = 'codex' }: { engine?: 'codex' |
     data: usage,
     error,
     refresh,
-  } = usePoll<Usage>(() => api.get(`/admin/api/${engine}/usage${forceRefresh.current ? '?refresh=1' : ''}`), 180000);
+  } = usePoll<Usage>(() => api.get(`/admin/api/${engine}/usage${forceRefresh.current ? '?refresh=1' : ''}`), 3600000);
   const [loading, setLoading] = useState(false);
   const reload = async () => {
     setLoading(true);

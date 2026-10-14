@@ -70,7 +70,7 @@ export function createSubscriptionUsageReader(
   let inFlight: Promise<SubscriptionUsage> | undefined;
   return async (logger: Logger, refresh = false): Promise<SubscriptionUsage> => {
     if (inFlight) return inFlight;
-    if (snapshot && Date.now() - lastAttempt < (refresh ? 10000 : 120000)) return snapshot;
+    if (snapshot && Date.now() - lastAttempt < (refresh ? 10000 : 3600000)) return snapshot;
     lastAttempt = Date.now();
     inFlight = (async () => {
       const client = factory(logger);
