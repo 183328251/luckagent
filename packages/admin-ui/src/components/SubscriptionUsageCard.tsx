@@ -38,19 +38,20 @@ function QuotaWindow({ value, fallback }: { value: Window | null; fallback: stri
           ? `${minutes} 分钟额度`
           : fallback;
   const remaining = Math.round(value.remainingPercent);
+  const used = Math.round(value.usedPercent);
   return (
     <div>
       <Typography.Text>
-        {label} · 剩余 <strong>{remaining}%</strong>
+        {label} · 已用 <strong>{used}%</strong> · 剩余 {remaining}%
       </Typography.Text>
       <Progress
-        percent={remaining}
-        strokeColor={remaining <= 10 ? '#ff4d4f' : remaining <= 25 ? '#faad14' : '#52c41a'}
+        percent={value.usedPercent}
+        strokeColor={value.usedPercent >= 90 ? '#ff4d4f' : value.usedPercent >= 75 ? '#faad14' : '#52c41a'}
         status="normal"
         showInfo={false}
       />
       <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-        已用 {Math.round(value.usedPercent)}% · {value.resetsAt ? `${time(value.resetsAt)} 重置` : '重置时间未提供'}
+        {value.resetsAt ? `${time(value.resetsAt)} 重置` : '重置时间未提供'}
       </Typography.Text>
     </div>
   );
