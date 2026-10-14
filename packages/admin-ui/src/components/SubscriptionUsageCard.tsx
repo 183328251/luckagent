@@ -97,10 +97,10 @@ export function SubscriptionUsageCard({ engine = 'codex' }: { engine?: 'codex' |
                 {usage.stale && <Tag color="orange">上次结果</Tag>}
               </Space>
               <Row gutter={[24, 12]}>
-                <Col xs={24} md={12}>
+                <Col span={24}>
                   <QuotaWindow value={bucket.primary} fallback="短期额度" />
                 </Col>
-                <Col xs={24} md={12}>
+                <Col span={24}>
                   <QuotaWindow value={bucket.secondary} fallback="长期额度" />
                 </Col>
               </Row>
