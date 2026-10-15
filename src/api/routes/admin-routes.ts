@@ -676,7 +676,7 @@ export async function handleAdminRoutes(
     const toMb = (b: number) => Math.round((b / 1024 / 1024) * 10) / 10;
 
     // Configured entries vs running registry — the diff is the failed set.
-    let configured: Array<{ name: string; engine: string; workDir: string | null }> = [];
+    let configured: Array<{ name: string; description?: string; engine: string; workDir: string | null }> = [];
     let configDirty = false;
     let configError: string | null = null;
     if (botsConfigPath) {
@@ -684,6 +684,7 @@ export async function handleAdminRoutes(
         const cfg = readBotsConfig(botsConfigPath);
         configured = (cfg.feishuBots || []).map((b) => ({
           name: b.name,
+          description: b.description,
           engine: (b as { engine?: string }).engine || 'claude',
           workDir: b.defaultWorkingDirectory || null,
         }));
@@ -719,6 +720,7 @@ export async function handleAdminRoutes(
       const totals = bot ? bot.bridge.costTracker.getStats().byBot[c.name] : undefined;
       return {
         name: c.name,
+        description: c.description,
         engine: bot ? resolveEngineName(bot.config) : c.engine,
         // effective default model (bots.json → .env default); null on claude = follow the plan
         model: runningInfo.get(c.name)?.model ?? null,

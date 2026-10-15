@@ -50,7 +50,22 @@ export default function BotsPage({ onChanged }: { onChanged: () => void }) {
   );
 
   const columns = [
-    { title: '名称', dataIndex: 'name', key: 'name', render: (v: string) => <strong>{v}</strong> },
+    {
+      title: '名称 / 描述',
+      dataIndex: 'name',
+      key: 'name',
+      render: (v: string, b: BotOverview) => (
+        <div style={{ minWidth: 140, maxWidth: 320 }}>
+          <strong>{v}</strong>
+          <Typography.Paragraph
+            type="secondary"
+            style={{ margin: '4px 0 0', fontSize: 12, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
+          >
+            {b.description?.trim() || '未填写描述'}
+          </Typography.Paragraph>
+        </div>
+      ),
+    },
     {
       title: '状态',
       key: 'status',

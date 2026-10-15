@@ -1,5 +1,6 @@
 export interface BotOverview {
   name: string;
+  description?: string;
   engine: string;
   /** Effective default model; null on claude = follow the subscription plan. */
   model?: string | null;
