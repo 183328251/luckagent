@@ -39,6 +39,21 @@ describe('OutboundLedger', () => {
     });
   });
 
+  it('records file size + work dir, and migrates a DB created before those columns existed', async () => {
+    ledger.close();
+    const dbPath = path.join(tmpDir, 'old.db');
+    const { default: Database } = await import('better-sqlite3');
+    const old = new Database(dbPath);
+    old.exec(`CREATE TABLE outbound_messages (message_id TEXT PRIMARY KEY, bot_name TEXT NOT NULL, chat_id TEXT NOT NULL,
+      kind TEXT NOT NULL, text TEXT, file_path TEXT, file_name TEXT, media_key TEXT, ts INTEGER NOT NULL)`);
+    old.prepare(`INSERT INTO outbound_messages VALUES ('om_old','botA','oc_1','file',NULL,'/tmp/x','x.pdf','file_k',?)`).run(Date.now());
+    old.close();
+    ledger = new OutboundLedger(mockLogger, { dbPath });
+    expect(ledger.get('om_old')).toMatchObject({ fileName: 'x.pdf', fileSize: undefined, workDir: undefined });
+    ledger.record({ messageId: 'om_new', botName: 'botA', chatId: 'oc_1', kind: 'file', fileName: 'y.pptx', mediaKey: 'k', fileSize: 42, workDir: '/w' });
+    expect(ledger.get('om_new')).toMatchObject({ fileSize: 42, workDir: '/w' });
+  });
+
   it('get on a missing id returns undefined', () => {
     expect(ledger.get('om_missing')).toBeUndefined();
   });

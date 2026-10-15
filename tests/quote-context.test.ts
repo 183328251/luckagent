@@ -158,6 +158,76 @@ describe('resolveQuotedMessage', () => {
     expect(res).toMatchObject({ kind: 'bot-media-gone', fileName: 'gone.pdf' });
   });
 
+  // 飞书发文件消息时会给文件换新 key：上传 key ≠ 消息内 key（2026-10-15 实测，回捞 13 次全 234003）。
+  it('bot file re-download uses the key actually in the message, not the upload key', async () => {
+    const deps = makeDeps({
+      downloadsDir: tmpDir,
+      ledger: { get: vi.fn().mockReturnValue({ messageId: 'om_parent', botName: 'botA', chatId: 'oc_1', kind: 'file', fileName: 'deck.pptx', mediaKey: 'file_upload_k', ts: 1 }) },
+    });
+    deps.fetchMessage.mockResolvedValue({ msgType: 'file', content: JSON.stringify({ file_key: 'file_msg_k', file_name: 'deck.pptx' }) });
+    const res = await resolveQuotedMessage(msg(), deps);
+    expect(deps.fetchMessage).toHaveBeenCalledWith('om_parent');
+    expect(deps.downloadFile).toHaveBeenCalledWith('om_parent', 'file_msg_k', path.join(tmpDir, 'file_upload_k_deck.pptx'));
+    expect(res).toMatchObject({ kind: 'bot-media', mediaKind: 'file' });
+  });
+
+  it('bot image re-download keeps the ledger key (image keys survive sending) and skips the lookup', async () => {
+    const deps = makeDeps({
+      downloadsDir: tmpDir,
+      ledger: { get: vi.fn().mockReturnValue({ messageId: 'om_parent', botName: 'botA', chatId: 'oc_1', kind: 'image', mediaKey: 'img_k', ts: 1 }) },
+    });
+    await resolveQuotedMessage(msg(), deps);
+    expect(deps.fetchMessage).not.toHaveBeenCalled();
+    expect(deps.downloadImage).toHaveBeenCalledWith('om_parent', 'img_k', path.join(tmpDir, 'img_k.png'));
+  });
+
+  describe('outputs/ archive copy', () => {
+    const sentAt = Date.parse('2026-10-15T10:00:00+08:00');
+    function archive(rel: string, body: string, mtimeMs: number): string {
+      const p = path.join(tmpDir, 'work', 'outputs', rel);
+      fs.mkdirSync(path.dirname(p), { recursive: true });
+      fs.writeFileSync(p, body);
+      fs.utimesSync(p, mtimeMs / 1000, mtimeMs / 1000);
+      return p;
+    }
+    function fileRow(extra: Record<string, unknown> = {}) {
+      return {
+        messageId: 'om_parent', botName: 'botB', chatId: 'oc_1', kind: 'file', fileName: 'deck-v3.pptx',
+        mediaKey: 'file_k', fileSize: 5, workDir: path.join(tmpDir, 'work'), ts: sentAt, ...extra,
+      };
+    }
+
+    it('same name + size + not modified after send → used directly, no Feishu calls (also for another bot)', async () => {
+      const p = archive('2026-10/deck-v3.pptx', '12345', sentAt - 60_000);
+      const deps = makeDeps({ downloadsDir: tmpDir, ledger: { get: vi.fn().mockReturnValue(fileRow()) } });
+      const res = await resolveQuotedMessage(msg(), deps);
+      expect(res).toMatchObject({ kind: 'bot-media', localPath: p, otherBot: 'botB' });
+      expect(deps.fetchMessage).not.toHaveBeenCalled();
+      expect(deps.downloadFile).not.toHaveBeenCalled();
+    });
+
+    it('size mismatch → not reused, falls back to download', async () => {
+      archive('deck-v3.pptx', '123456789', sentAt - 60_000);
+      const deps = makeDeps({ downloadsDir: tmpDir, ledger: { get: vi.fn().mockReturnValue(fileRow()) } });
+      await resolveQuotedMessage(msg(), deps);
+      expect(deps.downloadFile).toHaveBeenCalled();
+    });
+
+    it('modified well after sending (same size) → treated as a different version, download instead', async () => {
+      archive('deck-v3.pptx', '12345', sentAt + 60 * 60_000);
+      const deps = makeDeps({ downloadsDir: tmpDir, ledger: { get: vi.fn().mockReturnValue(fileRow()) } });
+      await resolveQuotedMessage(msg(), deps);
+      expect(deps.downloadFile).toHaveBeenCalled();
+    });
+
+    it('old ledger rows without size never guess from the archive', async () => {
+      archive('deck-v3.pptx', '12345', sentAt - 60_000);
+      const deps = makeDeps({ downloadsDir: tmpDir, ledger: { get: vi.fn().mockReturnValue(fileRow({ fileSize: undefined })) } });
+      await resolveQuotedMessage(msg(), deps);
+      expect(deps.downloadFile).toHaveBeenCalled();
+    });
+  });
+
   it('ledger hit in a DIFFERENT chat falls through to third-party resolution', async () => {
     const deps = makeDeps({
       ledger: { get: vi.fn().mockReturnValue({ messageId: 'om_parent', botName: 'botA', chatId: 'oc_OTHER', kind: 'text', text: 'secret', ts: 1 }) },

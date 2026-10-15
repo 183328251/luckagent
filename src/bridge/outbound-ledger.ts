@@ -9,6 +9,8 @@
  *     goes stale fast (patch E empties the per-chat send dir at next turn
  *     start), so the media key is the durable handle: quote-context re-downloads
  *     from Feishu via (this row's messageId, mediaKey) whenever the file is gone.
+ *     Files also record size + the sending bot's work dir, so quote-context can
+ *     reuse the bot's own `<workDir>/outputs/` archive copy before downloading.
  *
  * One shared instance serves all bots in the process (om_* ids are globally
  * unique; bot_name disambiguates and lets "quote bot B's card while @-ing
@@ -35,6 +37,10 @@ export interface OutboundRecord {
   filePath?: string;
   fileName?: string;
   mediaKey?: string;
+  /** Size in bytes at send time — lets quote-context verify an archive copy is the same version. */
+  fileSize?: number;
+  /** Sending bot's working directory; its `outputs/` archive is searched before re-downloading. */
+  workDir?: string;
   ts: number;
 }
 
@@ -70,6 +76,10 @@ export class OutboundLedger {
         );
         CREATE INDEX IF NOT EXISTS idx_outbound_ts ON outbound_messages(ts);
       `);
+      // Columns added after the table first shipped — migrate existing DBs in place.
+      const cols = new Set((this.db.prepare('PRAGMA table_info(outbound_messages)').all() as Array<{ name: string }>).map(c => c.name));
+      if (!cols.has('file_size')) this.db.exec('ALTER TABLE outbound_messages ADD COLUMN file_size INTEGER');
+      if (!cols.has('work_dir')) this.db.exec('ALTER TABLE outbound_messages ADD COLUMN work_dir TEXT');
       this.cleanup();
       // 进程一跑数周，仅启动时清一次不够；unref 保证不阻止进程退出。
       this.cleanupTimer = setInterval(() => this.cleanup(), CLEANUP_INTERVAL_MS);
@@ -86,12 +96,13 @@ export class OutboundLedger {
     if (!this.db) return;
     try {
       this.db.prepare(`
-        INSERT OR REPLACE INTO outbound_messages (message_id, bot_name, chat_id, kind, text, file_path, file_name, media_key, ts)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT OR REPLACE INTO outbound_messages (message_id, bot_name, chat_id, kind, text, file_path, file_name, media_key, file_size, work_dir, ts)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         rec.messageId, rec.botName, rec.chatId, rec.kind,
         rec.text?.slice(0, MAX_TEXT_LEN) ?? null,
         rec.filePath ?? null, rec.fileName ?? null, rec.mediaKey ?? null,
+        rec.fileSize ?? null, rec.workDir ?? null,
         rec.ts ?? Date.now(),
       );
     } catch (err) {
@@ -125,6 +136,8 @@ export class OutboundLedger {
         filePath: row.file_path ?? undefined,
         fileName: row.file_name ?? undefined,
         mediaKey: row.media_key ?? undefined,
+        fileSize: row.file_size ?? undefined,
+        workDir: row.work_dir ?? undefined,
         ts: row.ts,
       };
     } catch (err) {

@@ -3,8 +3,11 @@
  * 变成 agent 可用的回合上下文。
  *
  * 解析优先级：
- *   1. 出站台账命中（bot 自己/同进程其他 bot 发的消息）→ 文本直接引用；媒体优先用
- *      原始本地路径，被design-note E 清掉后按 (台账行 messageId, mediaKey) 从飞书回捞。
+ *   1. 出站台账命中（bot 自己/同进程其他 bot 发的消息）→ 文本直接引用；媒体依次找：
+ *      原始本地路径（发过即删，通常已不在）→ 发送 bot 的 `<workDir>/outputs/` 归档里
+ *      同名且大小一致、发送后未改过的文件 → 从飞书回捞。回捞文件/语音必须先用
+ *      message.get 取消息里**实际**的 key：飞书发消息时会给文件换新 key，上传时拿到的
+ *      key 不属于这条消息（234003 File not in msg）；图片 key 发送前后不变。
  *   2. 台账未命中（他人消息 / 台账断档）→ im.v1.message.get 拉原文；被引图片/文件
  *      按 (parentId, key) 下载落地，当作本轮附件喂给 agent。
  *   3. 任何失败（无权限 scope、消息撤回、网络、台账损坏）→ 降级提醒（请用户粘贴/
@@ -40,6 +43,60 @@ export type QuoteResolution =
   | { kind: 'unreadable' };
 
 const QUOTE_TEXT_MAX = 1500;
+
+/** 归档副本的 mtime 允许晚于发送时刻的余量（bot 偶尔先发后归档）。超出即视为发送后改过。 */
+const ARCHIVE_MTIME_SLACK_MS = 5 * 60 * 1000;
+const ARCHIVE_MAX_DEPTH = 3;
+const ARCHIVE_MAX_ENTRIES = 5000;
+
+/**
+ * 在发送 bot 的 `<workDir>/outputs/` 归档里找被引文件的同一版本：同名 + 大小一致 +
+ * mtime 不晚于发送时刻（留余量）。缺大小（旧台账行）不猜，直接返回 undefined 走回捞。
+ * 有界遍历（深度/条目上限），找不到或出错都返回 undefined。Exported for tests.
+ */
+export function findArchivedCopy(
+  workDir: string | undefined, fileName: string | undefined, fileSize: number | undefined, sentAt: number,
+): string | undefined {
+  if (!workDir || !fileName || fileSize === undefined) return undefined;
+  const root = path.join(workDir, 'outputs');
+  let seen = 0;
+  const walk = (dir: string, depth: number): string | undefined => {
+    let entries: fs.Dirent[];
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return undefined; }
+    const subdirs: string[] = [];
+    for (const e of entries) {
+      if (++seen > ARCHIVE_MAX_ENTRIES) return undefined;
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) { if (!e.name.startsWith('.')) subdirs.push(p); continue; }
+      if (!e.isFile() || e.name !== fileName) continue;
+      try {
+        const st = fs.statSync(p);
+        if (st.size === fileSize && st.mtimeMs <= sentAt + ARCHIVE_MTIME_SLACK_MS) return p;
+      } catch { /* skip */ }
+    }
+    if (depth >= ARCHIVE_MAX_DEPTH) return undefined;
+    for (const d of subdirs) {
+      const hit = walk(d, depth + 1);
+      if (hit) return hit;
+    }
+    return undefined;
+  };
+  return walk(root, 0);
+}
+
+/** 取消息里实际的媒体 key（file_key / image_key）。拿不到返回 undefined。 */
+async function actualMediaKey(deps: QuoteContextDeps, messageId: string): Promise<string | undefined> {
+  if (!deps.sender.fetchMessage) return undefined;
+  try {
+    const fm = await deps.sender.fetchMessage(messageId);
+    if (!fm || fm.deleted) return undefined;
+    const c = JSON.parse(fm.content);
+    const key = c?.file_key ?? c?.image_key;
+    return typeof key === 'string' && key ? key : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 function truncate(text: string): string {
   return text.length > QUOTE_TEXT_MAX ? `${text.slice(0, QUOTE_TEXT_MAX)}\n…（已截断）` : text;
@@ -168,10 +225,17 @@ export async function resolveQuotedMessage(
       if (rec.kind === 'card' || rec.kind === 'text' || rec.kind === 'notice') {
         return { kind: 'bot-text', source: rec.kind, text: truncate(rec.text ?? ''), otherBot };
       }
-      // 媒体：本地文件还在就直接用；被design-note E 清掉则按 (台账行 messageId, mediaKey) 回捞
+      // 媒体：本地文件还在就直接用 → 归档里的同一版本 → 从飞书回捞
       const mediaKind = rec.kind;
       if (rec.filePath && reusableLocalFile(rec.filePath)) {
         return { kind: 'bot-media', mediaKind, localPath: rec.filePath, fileName: rec.fileName, otherBot };
+      }
+      if (mediaKind === 'file') {
+        const archived = findArchivedCopy(rec.workDir, rec.fileName, rec.fileSize, rec.ts);
+        if (archived) {
+          logger.info({ parentId, archived }, 'Quoted bot file found in outputs archive');
+          return { kind: 'bot-media', mediaKind, localPath: archived, fileName: rec.fileName, otherBot };
+        }
       }
       if (rec.mediaKey) {
         const savePath = mediaKind === 'image'
@@ -182,9 +246,13 @@ export async function resolveQuotedMessage(
           return { kind: 'bot-media', mediaKind, localPath: savePath, fileName: rec.fileName, otherBot };
         }
         try {
+          // 文件/语音的消息内 key ≠ 上传 key，必须先查实际 key；查不到再退回台账 key
+          const key = mediaKind === 'image'
+            ? rec.mediaKey
+            : (await actualMediaKey(deps, rec.messageId)) ?? rec.mediaKey;
           const dl = mediaKind === 'image'
-            ? await deps.sender.downloadImage(rec.messageId, rec.mediaKey, savePath)
-            : await deps.sender.downloadFile(rec.messageId, rec.mediaKey, savePath);
+            ? await deps.sender.downloadImage(rec.messageId, key, savePath)
+            : await deps.sender.downloadFile(rec.messageId, key, savePath);
           if (dl === true) {
             logger.info({ parentId, savePath }, 'Quoted bot media re-downloaded (local copy was swept)');
             return { kind: 'bot-media', mediaKind, localPath: savePath, fileName: rec.fileName, otherBot };

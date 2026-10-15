@@ -1,3 +1,4 @@
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { DownloadOutcome, FetchedMessage, IMessageSender } from '../bridge/message-sender.interface.js';
 import type { CardState } from '../types.js';
@@ -38,7 +39,7 @@ function cardLedgerText(state: CardState): string {
 export class FeishuSenderAdapter implements IMessageSender {
   constructor(
     private sender: MessageSender,
-    private opts?: { ledger?: OutboundLedger; botName?: string },
+    private opts?: { ledger?: OutboundLedger; botName?: string; workDir?: string },
   ) {}
 
   /** [design-note P] 台账登记；无 ledger / 无 messageId 时为无操作，绝不影响发送结果。 */
@@ -46,7 +47,7 @@ export class FeishuSenderAdapter implements IMessageSender {
     messageId: string | undefined,
     chatId: string,
     kind: OutboundKind,
-    fields: { text?: string; filePath?: string; fileName?: string; mediaKey?: string } = {},
+    fields: { text?: string; filePath?: string; fileName?: string; mediaKey?: string; fileSize?: number; workDir?: string } = {},
   ): void {
     if (!messageId || !this.opts?.ledger) return;
     this.opts.ledger.record({
@@ -119,9 +120,12 @@ export class FeishuSenderAdapter implements IMessageSender {
   async sendLocalFile(chatId: string, filePath: string, fileName: string): Promise<boolean> {
     const ext = path.extname(fileName).toLowerCase();
     const feishuType = OutputsManager.feishuFileType(ext);
+    // Stat before sending: the send dir copy is deleted right after delivery (design-note Q).
+    let fileSize: number | undefined;
+    try { fileSize = fs.statSync(filePath).size; } catch { /* ledger just lacks size */ }
     const res = await this.sender.sendLocalFile(chatId, filePath, fileName, feishuType);
     if (res !== false) {
-      this.recordOutbound(res.messageId, chatId, 'file', { filePath, fileName, mediaKey: res.mediaKey });
+      this.recordOutbound(res.messageId, chatId, 'file', { filePath, fileName, mediaKey: res.mediaKey, fileSize, workDir: this.opts?.workDir });
     }
     return res !== false;
   }

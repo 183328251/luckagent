@@ -93,7 +93,7 @@ async function startFeishuBot(botConfig: BotConfig, logger: Logger, localAgent?:
   // Create sender and bridge (FeishuSenderAdapter wraps the Feishu-specific MessageSender)
   const rawSender = new MessageSender(client, botLogger);
   // [design-note P] 出站台账：adapter 写入（记每条出站消息）、bridge 读取（引用回复解析）
-  const sender = new FeishuSenderAdapter(rawSender, { ledger: outboundLedger, botName: botConfig.name });
+  const sender = new FeishuSenderAdapter(rawSender, { ledger: outboundLedger, botName: botConfig.name, workDir: botConfig.claude.defaultWorkingDirectory });
   const bridge = new MessageBridge(botConfig, botLogger, sender, { outboundLedger });
 
   // Create event dispatcher wired to the bridge
