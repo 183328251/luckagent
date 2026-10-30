@@ -29,10 +29,11 @@ const memberCountCache = new Map<string, { count: number; ts: number }>();
 // (at-least-once) when the handler is slow to respond — e.g. a long-running task
 // or media download — so without dedup the same message gets processed repeatedly.
 const PROCESSED_MSG_TTL_MS = 10 * 60 * 1000; // 10 minutes
-const processedMessages = new Map<string, number>(); // messageId -> ts
+const processedMessages = new Map<string, number>(); // [appId, messageId] -> ts
 
-/** Returns true if this messageId was already seen (and records it otherwise). */
-function isDuplicateMessage(messageId: string): boolean {
+/** Deduplicate within one app, shared by its live and backfill handlers. */
+function isDuplicateMessage(appId: string, messageId: string): boolean {
+  const key = JSON.stringify([appId, messageId]);
   const now = Date.now();
   // Opportunistic cleanup of stale entries
   if (processedMessages.size > 500) {
@@ -40,9 +41,9 @@ function isDuplicateMessage(messageId: string): boolean {
       if (now - ts > PROCESSED_MSG_TTL_MS) processedMessages.delete(id);
     }
   }
-  const seen = processedMessages.get(messageId);
+  const seen = processedMessages.get(key);
   if (seen !== undefined && now - seen < PROCESSED_MSG_TTL_MS) return true;
-  processedMessages.set(messageId, now);
+  processedMessages.set(key, now);
   return false;
 }
 
@@ -105,7 +106,7 @@ export function createReceiveHandler(
 
         // Dedup: Feishu retries delivery if we respond slowly (e.g. during a
         // long task). Mark this messageId as seen up-front so retries are dropped.
-        if (messageId && isDuplicateMessage(messageId)) {
+        if (messageId && isDuplicateMessage(config.feishu.appId, messageId)) {
           logger.debug({ messageId, msgType }, 'Duplicate message delivery ignored');
           return;
         }

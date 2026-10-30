@@ -81,6 +81,40 @@ function makeHandler(cfg: Partial<BotConfig> = {}, history: Record<string, Liste
   return { handle, received, sent, listCalls };
 }
 
+describe('message deduplication across bots', () => {
+  it('delivers a shared message to both mentioned apps, once per app', async () => {
+    const a = makeHandler();
+    const b = makeHandler({ feishu: { appId: 'other-app', appSecret: 'b' } });
+    const ev = event({ chatId: fresh('oc'), chatType: 'group', mention: true });
+    await Promise.all([a.handle(ev), b.handle(ev)]);
+    await Promise.all([a.handle(ev), b.handle(ev)]);
+    expect(a.received).toHaveLength(1);
+    expect(b.received).toHaveLength(1);
+  });
+
+  it('an unmentioned app cannot consume the mentioned app’s message', async () => {
+    const ignored: IncomingMessage[] = [];
+    const other = createReceiveHandler(
+      { feishu: { appId: 'unmentioned-app', appSecret: 'b' } } as BotConfig,
+      logger, (m) => ignored.push(m), 'ou_other_bot',
+    );
+    const target = makeHandler();
+    const ev = event({ chatId: fresh('oc'), chatType: 'group', mention: true });
+    await other(ev);
+    await target.handle(ev);
+    expect(ignored).toHaveLength(0);
+    expect(target.received).toHaveLength(1);
+  });
+
+  it('separate live and backfill handlers for the same app share deduplication', async () => {
+    const live = makeHandler();
+    const backfill = makeHandler();
+    const ev = event({ chatId: fresh('oc'), chatType: 'group', mention: true });
+    await Promise.all([live.handle(ev), backfill.handle(ev)]);
+    expect(live.received.length + backfill.received.length).toBe(1);
+  });
+});
+
 describe('[design-note S] privateRequireMention — gating', () => {
   it('switch off: p2p answers without @ and never fetches history', async () => {
     const h = makeHandler();
