@@ -2,6 +2,36 @@
 
 版本号 = 根 `package.json`（管理台总览页显示的就是它）。升级：`luckagent update`（git 安装）或重跑一行安装命令（tarball 安装）。git tag 与本文件同步打点。
 
+## v0.7.29 — 2026-10-21
+
+`luckagent update` 升级 opencli 后自动收尾，不用再手动重启 daemon、自己查扩展版本。
+
+- **自动重启 daemon**：opencli 版本有变化时执行 `opencli daemon restart`，避免新 CLI 连着旧版 daemon；版本没变不重启，不打断 bot 正在跑的浏览器任务。重启失败给 warn 和手动命令
+- **检查 Chrome 扩展**：升级后跑 `opencli doctor`，扩展过旧时 warn 并给出下载地址（jackwener/OpenCLI releases，ZIP 在 `chrome://extensions` 里加载）；Chrome 未打开、扩展未连接时只提示稍后自行 `opencli doctor`
+- 检查出错（doctor 失败、输出无法解析等）只跳过提示，不中断 update
+- 修正 v0.7.28 的升级提示：opencli 2.0 不拒绝旧版扩展，建议升到 1.0.26 修复 `Navigation rejected.`
+
+## v0.7.28 — 2026-10-21
+
+opencli 内置技能适配 opencli 2.0。`luckagent update` 会照常把 opencli 升到 `@latest`（当前 2.0.2），升级后 bot 按新技能调用。
+
+- **适配 2.0 破坏性变更**：输出默认是 `{ok, data}` JSON 信封（失败为 `{ok:false, error}` 且退出码非零）；浏览器页面命令必须带 `--session`；`Access` 标签改为 read/write，write 类命令先找用户确认；去掉已被 2.0 移除的外部 CLI 透传（gh / lark-cli 等改为直接调用）
+- **新用法**：`opencli list <关键词>` 分页搜索命令、`--help -f json` 看结构化参数、`browser chrome describe/call`、`browser network --static`
+- **已知问题绕行**：opencli 2.0.2 的 `xiaohongshu search` 在小红书 AI 搜索首页上报 `search_input_not_available`（上游 jackwener/OpenCLI#2673 待合并）。技能里给出直接打开搜索结果页再 `eval` 读笔记卡片的步骤，上游修好后移除
+- **升级提示**：opencli 2.0 不会拒绝旧版 Chrome 扩展（≥ 1.0.22 即可完整使用失败自动重试），但建议升到 1.0.26，修复浏览器命令偶发的 `Navigation rejected.`；升级 CLI 后执行 `opencli daemon restart`，再用 `opencli doctor` 确认
+
+## v0.7.27 — 2026-10-21
+
+管理台「记忆」页新增每条记忆的召回统计，一眼看出哪些记忆 bot 常用、哪些已经没人读。
+
+- **召回次数**：从 Claude Code 会话记录统计 bot 主动读取每个记忆文件的对话轮数（一轮里读多少遍只算 1 次），含 Read 工具和 `cat` / `grep` / `sed -n` 等命令读取（全路径、`cd` 进记忆目录后的文件名、`$M/xx.md` 都能识别）。MEMORY.md 每次会话自动加载、写入 / 修改记忆、上下文压缩后重新附上的文件均不计；别的 bot 读了也算在记忆所属 bot 名下。DeepSeek 引擎不写会话记录，统计不到
+- **明细**：新增「30 天 / 累计召回 / 最近召回」三列，可排序；超过 30 天没读过标橙，从没读过标「从未召回」（悬浮显示统计起始日）。状态筛选新增「30 天未召回」
+- **总览**：新增「30 天召回 / 30 天未召回」两列，点未召回数字直接下钻到这批冷记忆，方便合并或清理
+- **详情抽屉**：显示近 7 天 / 近 30 天 / 累计召回次数、会话数与最近召回时间
+- 新增接口 `GET /admin/api/memory/recall`；增量扫描，缓存在 `~/.luckagent/memory-recall-cache.json`，首次全量扫描约 4 秒，之后每分钟最多增量扫一次
+- 技能使用统计的增量扫描与缓存抽成通用的 `TranscriptScanStore`，技能统计与召回统计共用，技能统计结果不变
+- 测试：新增召回识别（全路径 / 裸文件名 / 变量目录、写入与 heredoc 排除、多目录歧义）、按轮去重与归属、增量扫描等用例，全量 938 例通过
+
 ## v0.7.26 — 2026-10-15
 
 修复飞书附件收不到的几处问题：文字和文件一起发、引用回复带文件的消息、引用 bot 自己发过的文件。
