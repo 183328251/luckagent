@@ -56,6 +56,7 @@ export interface CodexBotConfig {
 /** Shared config fields used by MessageBridge and Executors (platform-agnostic). */
 export interface BotConfigBase {
   name: string;
+  reimbursementPrint?: import('./modules/reimbursement-print/types.js').ReimbursementPrintConfig;
   description?: string;
   specialties?: string[];
   icon?: string;
@@ -276,6 +277,7 @@ interface EngineJsonFields {
 
 export interface FeishuBotJsonEntry extends EngineJsonFields {
   name: string;
+  reimbursementPrint?: import('./modules/reimbursement-print/types.js').ReimbursementPrintConfig;
   description?: string;
   specialties?: string[];
   icon?: string;
@@ -313,6 +315,7 @@ export interface FeishuBotJsonEntry extends EngineJsonFields {
 function feishuBotFromJson(entry: FeishuBotJsonEntry): BotConfig {
   return {
     name: entry.name,
+    ...(entry.reimbursementPrint ? { reimbursementPrint: entry.reimbursementPrint } : {}),
     ...(entry.description ? { description: entry.description } : {}),
     ...(entry.specialties?.length ? { specialties: entry.specialties } : {}),
     ...(entry.icon ? { icon: entry.icon } : {}),

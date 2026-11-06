@@ -12,6 +12,7 @@ export type MessageHandler = (msg: IncomingMessage) => void;
 
 /** Payload delivered when a user clicks a button on an interactive card. */
 export interface CardActionEvent {
+  tenantKey?: string;
   chatId: string;
   userId: string;
   messageId: string;
@@ -19,7 +20,7 @@ export interface CardActionEvent {
   value: Record<string, unknown>;
 }
 
-export type CardActionHandler = (event: CardActionEvent) => void;
+export type CardActionHandler = (event: CardActionEvent) => void | { toast: { type: string; content: string } };
 
 // Cache for group member counts (to avoid calling Feishu API on every message)
 const MEMBER_COUNT_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -108,6 +109,17 @@ export function createReceiveHandler(
         // long task). Mark this messageId as seen up-front so retries are dropped.
         if (messageId && isDuplicateMessage(config.feishu.appId, messageId)) {
           logger.debug({ messageId, msgType }, 'Duplicate message delivery ignored');
+          return;
+        }
+
+        // Deterministic business bots do not assemble model prompts or fetch
+        // quote/round context. Preserve the platform's actual chat type.
+        if (config.reimbursementPrint?.enabled) {
+          let text = '';
+          if (msgType === 'text') {
+            try { text = JSON.parse(message.content).text || ''; } catch { /* default help */ }
+          }
+          onMessage({ messageId, chatId, chatType, userId, tenantKey: sender.tenant_key, text });
           return;
         }
 
@@ -299,7 +311,7 @@ export function createEventDispatcher(
       'card.action.trigger': (data: unknown) => {
         try {
           const d = data as {
-            operator?: { open_id?: string };
+            operator?: { open_id?: string; tenant_key?: string };
             action?: { value?: unknown };
             context?: { open_message_id?: string; open_chat_id?: string };
           };
@@ -311,13 +323,14 @@ export function createEventDispatcher(
             logger.warn({ data }, 'Card action missing required fields');
             return { toast: { type: 'error', content: 'Invalid card action' } };
           }
-          onCardAction({
+          const response = onCardAction({
+            tenantKey: d.operator?.tenant_key,
             chatId,
             userId,
             messageId,
             value: raw as Record<string, unknown>,
           });
-          return { toast: { type: 'success', content: '已收到' } };
+          return response || { toast: { type: 'success', content: '已收到' } };
         } catch (err) {
           logger.error({ err }, 'Error handling card action');
           return { toast: { type: 'error', content: 'Internal error' } };

@@ -93,6 +93,8 @@ export interface CardState {
 }
 
 export interface IncomingMessage {
+  /** Platform-verified tenant, never supplied by card action.value. */
+  tenantKey?: string;
   messageId: string;
   chatId: string;
   chatType: string;

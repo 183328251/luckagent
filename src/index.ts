@@ -8,6 +8,9 @@ import { createEventDispatcher, createReceiveHandler } from './feishu/event-hand
 import { MessageSender } from './feishu/message-sender.js';
 import { FeishuSenderAdapter } from './feishu/feishu-sender-adapter.js';
 import { MessageBridge } from './bridge/message-bridge.js';
+import { ApprovalClient } from './modules/reimbursement-print/approval-client.js';
+import { createRenderer } from './modules/reimbursement-print/renderer.js';
+import { ReimbursementPrintService } from './modules/reimbursement-print/service.js';
 import { OutboundLedger } from './bridge/outbound-ledger.js';
 import { loadRestartBreadcrumb } from './bridge/restart-notice.js';
 import type { IMessageSender } from './bridge/message-sender.interface.js';
@@ -94,7 +97,15 @@ async function startFeishuBot(botConfig: BotConfig, logger: Logger, localAgent?:
   const rawSender = new MessageSender(client, botLogger);
   // [design-note P] 出站台账：adapter 写入（记每条出站消息）、bridge 读取（引用回复解析）
   const sender = new FeishuSenderAdapter(rawSender, { ledger: outboundLedger, botName: botConfig.name, workDir: botConfig.claude.defaultWorkingDirectory });
-  const bridge = new MessageBridge(botConfig, botLogger, sender, { outboundLedger });
+  const printConfig = botConfig.reimbursementPrint;
+  const businessHandler = printConfig?.enabled ? new ReimbursementPrintService(
+    printConfig,
+    new ApprovalClient(client, printConfig.approvalCode, printConfig.financeNodeIds || []),
+    rawSender,
+    createRenderer(printConfig, botConfig.claude.defaultWorkingDirectory),
+    botLogger,
+  ) : undefined;
+  const bridge = new MessageBridge(botConfig, botLogger, sender, { outboundLedger, businessHandler });
 
   // Create event dispatcher wired to the bridge
   const dispatcher = createEventDispatcher(
@@ -108,9 +119,16 @@ async function startFeishuBot(botConfig: BotConfig, logger: Logger, localAgent?:
     botOpenId,
     rawSender,
     (event) => {
-      bridge.handleCardAction(event).catch((err) => {
-        botLogger.error({ err, event }, 'Unhandled error in card action handler');
+      if (businessHandler) {
+        const error = businessHandler.validateCardAction(event);
+        if (error) return { toast: { type: 'error', content: error } };
+      }
+      const run = () => bridge.handleCardAction(event).catch(() => {
+        botLogger.error('Unhandled error in card action handler');
       });
+      // Return the platform callback ACK before starting print work.
+      if (businessHandler) setImmediate(run);
+      else void run();
     },
   );
 

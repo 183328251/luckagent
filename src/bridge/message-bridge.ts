@@ -310,7 +310,7 @@ export class MessageBridge {
     private logger: Logger,
     private sender: IMessageSender,
     // [design-note P] 出站台账（引用回复解析用）；可选，未传时引用解析走 API/降级
-    private deps?: { outboundLedger?: OutboundLedger },
+    private deps?: { outboundLedger?: OutboundLedger; businessHandler?: import('../modules/reimbursement-print/types.js').BusinessHandler },
   ) {
     this.engine = createEngine(config, logger);
     this.executor = this.engine.createExecutor();
@@ -1713,11 +1713,16 @@ export class MessageBridge {
    * handleAnswer so both paths go through the exact same flow.
    */
   async handleCardAction(event: {
+    tenantKey?: string;
     chatId: string;
     userId: string;
     messageId: string;
     value: Record<string, unknown>;
   }): Promise<void> {
+    if (this.config.reimbursementPrint?.enabled) {
+      if (this.deps?.businessHandler) await this.deps.businessHandler.handleCardAction(event);
+      return;
+    }
     const { chatId, userId, messageId, value } = event;
     const task = this.runningTasks.get(chatId);
     if (!task || !task.pendingQuestion) {
@@ -1754,6 +1759,19 @@ export class MessageBridge {
 
   async handleMessage(msg: IncomingMessage): Promise<void> {
     const { chatId, text } = msg;
+
+    // Business mode intercepts every request, including API/scheduler entry
+    // points. Unknown slash commands must never fall through to a model.
+    if (this.config.reimbursementPrint?.enabled) {
+      if (msg.chatType === 'p2p' && /^(?:reset|\/(?:reset|stop|status))$/i.test(text.trim())) {
+        await this.commandHandler.handle({ ...msg, text: text.trim().toLowerCase() === 'reset' ? '/reset' : text.trim().toLowerCase() });
+      } else if (this.deps?.businessHandler) {
+        await this.deps.businessHandler.handleMessage(msg);
+      } else {
+        await this.sender.sendText(chatId, '报销打印模块暂不可用，请联系管理员。');
+      }
+      return;
+    }
 
     // Feishu users often type command names without the leading slash. Treat
     // an exact bare "reset" as /reset so it can abort a running PTY turn and
@@ -2886,6 +2904,11 @@ export class MessageBridge {
   }
 
   async executeApiTask(options: ApiTaskOptions): Promise<ApiTaskResult> {
+    // Scheduled/cross-bot API jobs carry no platform-verified employee
+    // identity. A print-only bot must not start a model from this entry.
+    if (this.config.reimbursementPrint?.enabled) {
+      return { success: false, responseText: '', error: '报销打印助手仅接受员工在飞书私聊中的请求。' };
+    }
     // Busy check and admission happen synchronously, before the first await:
     // rollover / sweepDir / sendCard below all yield, and a user message
     // arriving then must queue instead of starting a colliding turn.

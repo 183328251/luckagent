@@ -1,0 +1,12 @@
+{
+  "reimbursementPrint": {
+    "enabled": false,
+    "approvalCode": "YOUR_APPROVAL_CODE",
+    "financeNodeIds": [
+      "YOUR_FINANCE_NODE_ID"
+    ],
+    "templatePath": "reimbursement-print/template.xlsx",
+    "sessionTtlSeconds": 900,
+    "pythonPath": "python3"
+  }
+}

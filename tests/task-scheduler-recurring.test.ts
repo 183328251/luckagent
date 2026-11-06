@@ -2,7 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { TaskScheduler } from '../src/scheduler/task-scheduler.js';
+// Isolate persistence exactly as the one-time scheduler tests do. Never
+// delete/restore the running service's real scheduled-tasks.json in a test.
+process.env.SESSION_STORE_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'task-scheduler-recurring-'));
+const { TaskScheduler } = await import('../src/scheduler/task-scheduler.js');
 import type { BotRegistry } from '../src/api/bot-registry.js';
 import type { Logger } from '../src/utils/logger.js';
 
@@ -20,7 +23,7 @@ vi.mock('../src/scheduler/cron-utils.js', () => ({
 import { nextCronOccurrence } from '../src/scheduler/cron-utils.js';
 const mockNextCron = vi.mocked(nextCronOccurrence);
 
-const PERSIST_DIR = path.join(os.homedir(), '.luckagent');
+const PERSIST_DIR = process.env.SESSION_STORE_DIR;
 const PERSIST_FILE = path.join(PERSIST_DIR, 'scheduled-tasks.json');
 
 function createMockLogger(): Logger {
