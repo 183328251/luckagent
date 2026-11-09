@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  Alert,
   Button,
   Collapse,
   Drawer,
@@ -41,6 +42,8 @@ export default function BotFormDrawer({
   onSaved: () => void;
 }) {
   const [form] = Form.useForm();
+  const [initialEngine, setInitialEngine] = useState<string>();
+  const [defaultEngine, setDefaultEngine] = useState('claude');
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
   const [codexCatalog, setCodexCatalog] = useState<CodexModelCatalog>();
@@ -50,9 +53,12 @@ export default function BotFormDrawer({
   useEffect(() => {
     if (!open) return;
     form.resetFields();
+    setInitialEngine(undefined);
     if (editing) {
-      void api.get<{ config: BotEntry }>(`/api/bots/${encodeURIComponent(editing)}`).then((r) => {
+      void api.get<{ config: BotEntry; configuredEngine?: string; defaultEngine?: string }>(`/api/bots/${encodeURIComponent(editing)}`).then((r) => {
         const cfg = r.config || {};
+        setDefaultEngine(r.defaultEngine || 'claude');
+        setInitialEngine(r.configuredEngine || cfg.engine || r.defaultEngine || 'claude');
         form.setFieldsValue({
           ...cfg,
           groupOnlyAllowUsers: cfg.groupOnlyAllowUsers || [],
@@ -68,7 +74,7 @@ export default function BotFormDrawer({
   // '' as "delete this key", so clearing the whitelist / model override etc.
   // actually removes it from bots.json instead of being ignored.
   const CLEARABLE = [
-    'description', 'model', 'maxTurns', 'maxBudgetUsd', 'budgetLimitDaily',
+    'engine', 'description', 'model', 'maxTurns', 'maxBudgetUsd', 'budgetLimitDaily',
     'maxConcurrentTasks', 'downloadsDir', 'ttsVoice', 'groupOnlyAllowUsers',
   ];
 
@@ -153,8 +159,9 @@ export default function BotFormDrawer({
     }
   };
 
-  const engine = Form.useWatch('engine', form) || 'claude';
+  const engine = Form.useWatch('engine', form) || defaultEngine;
   const botName = Form.useWatch('name', form);
+  const switchingEngine = !!editing && !!initialEngine && engine !== initialEngine && ['claude', 'codex'].includes(engine);
   const codexModel = Form.useWatch(['codex', 'model'], form) as string | undefined;
 
   useEffect(() => {
@@ -259,7 +266,8 @@ export default function BotFormDrawer({
           </Form.Item>
         )}
 
-        {editing && engine === 'codex' && (
+        {switchingEngine && <Alert type="info" showIcon style={{ marginBottom: 16 }} message="切换引擎后将清除原模型与推理强度覆盖，跟随默认设置；已有会话的 /model 设置保留。" />}
+        {editing && engine === 'codex' && !switchingEngine && (
           <Collapse
             size="small"
             defaultActiveKey={['codex']}
@@ -383,9 +391,9 @@ export default function BotFormDrawer({
               label: '限制与预算（可选）',
               children: (
                 <>
-                  <Form.Item name="model" label="模型覆盖（Claude）">
+                  {engine === 'claude' && !switchingEngine && <Form.Item name="model" label="模型覆盖（Claude）">
                     <Input placeholder="留空 = 用「系统配置 → 默认设置」里的 Claude 默认模型" />
-                  </Form.Item>
+                  </Form.Item>}
                   <Form.Item name="maxTurns" label="单任务最大回合数">
                     <InputNumber min={1} style={{ width: '100%' }} />
                   </Form.Item>

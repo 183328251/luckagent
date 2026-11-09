@@ -5,6 +5,7 @@ import * as path from 'node:path';
 import * as dotenv from 'dotenv';
 import { execFile } from 'node:child_process';
 import type * as http from 'node:http';
+import { engineSettingsOverview, configuredEngine } from '../bot-engine-settings.js';
 import { readBotsConfig } from '../bots-config-writer.js';
 import { expandUserPath, ORIGINAL_ENV_KEYS, projectsRoot } from '../../config.js';
 import { COMPAT_PROVIDERS, resolveEngineName } from '../../engines/index.js';
@@ -695,7 +696,7 @@ export async function handleAdminRoutes(
     const toMb = (b: number) => Math.round((b / 1024 / 1024) * 10) / 10;
 
     // Configured entries vs running registry — the diff is the failed set.
-    let configured: Array<{ name: string; description?: string; engine: string; workDir: string | null }> = [];
+    let configured: Array<{ name: string; description?: string; engine: string; workDir: string | null; entry: import('../../config.js').FeishuBotJsonEntry }> = [];
     let configDirty = false;
     let configError: string | null = null;
     if (botsConfigPath) {
@@ -704,7 +705,8 @@ export async function handleAdminRoutes(
         configured = (cfg.feishuBots || []).map((b) => ({
           name: b.name,
           description: b.description,
-          engine: (b as { engine?: string }).engine || 'claude',
+          engine: configuredEngine(b),
+          entry: b,
           workDir: b.defaultWorkingDirectory || null,
         }));
         const mtime = fs.statSync(botsConfigPath).mtimeMs;
@@ -740,6 +742,7 @@ export async function handleAdminRoutes(
       return {
         name: c.name,
         description: c.description,
+        ...engineSettingsOverview(c.entry, bot?.config),
         engine: bot ? resolveEngineName(bot.config) : c.engine,
         // effective default model (bots.json → .env default); null on claude = follow the plan
         model: runningInfo.get(c.name)?.model ?? null,

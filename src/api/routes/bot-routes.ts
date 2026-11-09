@@ -1,7 +1,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type * as http from 'node:http';
-import { addBot, removeBot, updateBot, getBotEntry, addPeer, removePeer } from '../bots-config-writer.js';
+import { addBot, removeBot, updateBot, getBotEntry, addPeer, removePeer, batchSetBotEngine, BatchEngineError } from '../bots-config-writer.js';
+import { configuredEngine } from '../bot-engine-settings.js';
 import { installSkillsToWorkDir } from '../skills-installer.js';
 import { resolveEngineName } from '../../engines/index.js';
 import { defaultWorkDirFor, expandUserPath } from '../../config.js';
@@ -16,6 +17,23 @@ export async function handleBotRoutes(
   url: string,
 ): Promise<boolean> {
   const { registry, logger, botsConfigPath, peerManager } = ctx;
+
+  if (method === 'POST' && url === '/api/bots/batch-engine') {
+    if (!botsConfigPath) {
+      jsonResponse(res, 400, { error: 'Bot CRUD requires BOTS_CONFIG to be set' });
+      return true;
+    }
+    const body = await parseJsonBody(req);
+    try {
+      const result = batchSetBotEngine(botsConfigPath, body?.names, body?.engine);
+      logger.info({ names: result.updated, engine: body?.engine }, 'Bot engine configuration batch saved');
+      jsonResponse(res, 200, { ...result, requiresRestart: result.updated.length > 0 });
+    } catch (err) {
+      if (!(err instanceof BatchEngineError)) throw err;
+      jsonResponse(res, err.statusCode, { error: err.message });
+    }
+    return true;
+  }
 
   // GET /api/bots/:name/profile — detailed bot profile with stats
   if (method === 'GET' && /^\/api\/bots\/[^/]+\/profile$/.test(url)) {
@@ -272,7 +290,7 @@ export async function handleBotRoutes(
     if (botsConfigPath) {
       const found = getBotEntry(botsConfigPath, name);
       if (found) {
-        jsonResponse(res, 200, { name, platform: found.platform, ...runningInfo, config: redactBotEntry(found.entry as unknown as Record<string, unknown>) });
+        jsonResponse(res, 200, { name, platform: found.platform, ...runningInfo, configuredEngine: configuredEngine(found.entry), defaultEngine: configuredEngine({}), config: redactBotEntry(found.entry as unknown as Record<string, unknown>) });
         return true;
       }
     }

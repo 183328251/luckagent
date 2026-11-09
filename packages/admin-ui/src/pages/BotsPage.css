@@ -1,0 +1,70 @@
+.bots-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.bots-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.bot-card {
+  height: 100%;
+}
+.bot-card-selected {
+  border-color: #1677ff;
+}
+.bot-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.bot-settings {
+  min-height: 26px;
+}
+.bot-settings > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 26px;
+}
+.bot-runtime-label {
+  flex-shrink: 0;
+  font-size: 12px;
+}
+.bot-runtime-row .ant-tag {
+  flex-shrink: 0;
+  margin-inline-end: 0;
+}
+.bot-runtime-model {
+  flex: 1;
+}
+.bot-settings .ant-typography {
+  min-width: 0;
+  font-size: 12px;
+}
+.bot-stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 8px 0;
+  font-size: 12px;
+}
+@media (min-width: 1600px) {
+  .bots-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1100px) {
+  .bots-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .bots-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

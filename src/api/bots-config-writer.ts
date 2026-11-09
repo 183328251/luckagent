@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { BotsJsonNewFormat, FeishuBotJsonEntry, PeerJsonEntry } from '../config.js';
+import { configuredEngine, clearSubscriptionModelOverrides } from './bot-engine-settings.js';
 
 export function readBotsConfig(configPath: string): BotsJsonNewFormat {
   const raw = fs.readFileSync(configPath, 'utf-8');
@@ -68,9 +69,45 @@ export function updateBot(configPath: string, name: string, updates: Record<stri
 
   // Merge updates into existing entry (name and platform credentials are immutable)
   const entry = bots[idx] as unknown as Record<string, unknown>;
+  const previousEngine = configuredEngine(entry);
   mergeInto(entry, updates);
+  const nextEngine = configuredEngine(entry);
+  if ('engine' in updates && previousEngine !== nextEngine && (nextEngine === 'claude' || nextEngine === 'codex')) {
+    // Clear AFTER merging so hidden/echoed fields from the old edit form
+    // cannot restore stale model choices during an engine switch.
+    clearSubscriptionModelOverrides(entry);
+  }
   writeBotsConfig(configPath, config);
   return true;
+}
+
+export class BatchEngineError extends Error {
+  constructor(message: string, public readonly statusCode = 400) { super(message); }
+}
+
+/** Validate the whole selection first, then persist once. No runtime/session operations. */
+export function batchSetBotEngine(configPath: string, names: unknown, engine: unknown): { updated: string[]; unchanged: string[] } {
+  if (engine !== 'claude' && engine !== 'codex') throw new BatchEngineError('请选择 Claude 或 Codex。');
+  if (!Array.isArray(names) || !names.length || names.length > 200 || !names.every(n => typeof n === 'string' && n.length > 0 && n.length <= 128)) {
+    throw new BatchEngineError('请选择 1～200 个机器人。');
+  }
+  const unique = [...new Set(names)] as string[];
+  const config = readBotsConfig(configPath);
+  const entries = unique.map(name => {
+    const bot = config.feishuBots?.find(b => b.name === name);
+    if (!bot) throw new BatchEngineError(`机器人「${name}」不存在，请刷新列表后重试。`, 404);
+    if (bot.reimbursementPrint?.enabled) throw new BatchEngineError(`「${name}」使用无模型业务模块，不参与引擎切换。`);
+    return bot;
+  });
+  const updated: string[] = [], unchanged: string[] = [];
+  for (const entry of entries) {
+    if (configuredEngine(entry) === engine) { unchanged.push(entry.name); continue; }
+    entry.engine = engine;
+    clearSubscriptionModelOverrides(entry as unknown as Record<string, unknown>);
+    updated.push(entry.name);
+  }
+  if (updated.length) writeBotsConfig(configPath, config);
+  return { updated, unchanged };
 }
 
 /**
