@@ -5,7 +5,7 @@ import type { BotConfigBase } from '../src/config.js';
 
 const mocks = vi.hoisted(() => ({ spawn: vi.fn() }));
 vi.mock('node:child_process', () => ({ spawn: mocks.spawn }));
-import { buildCodexArgs, buildCodexEnv, CodexExecutor } from '../src/engines/codex/executor.js';
+import { buildCodexArgs, buildCodexEnv, codexWritableRoots, CodexExecutor } from '../src/engines/codex/executor.js';
 
 const logger = { info: vi.fn(), warn: vi.fn(), debug: vi.fn(), error: vi.fn() } as any;
 const config = { name: 'tiger', codex: { model: 'test-model' } } as BotConfigBase;
@@ -25,9 +25,31 @@ async function collect(handle: ReturnType<CodexExecutor['startExecution']>) {
   for await (const m of handle.stream) out.push(m);
   return out;
 }
-afterEach(() => vi.clearAllMocks());
+afterEach(() => { vi.clearAllMocks(); vi.unstubAllEnvs(); });
 
 describe('Codex CLI lifecycle', () => {
+  it('shares global directory grants across bots and merges per-bot grants without disabling the sandbox', () => {
+    vi.stubEnv('LUCKAGENT_CODEX_WRITABLE_ROOTS', '["/tmp"]');
+    expect(codexWritableRoots({}, '/tmp')).toEqual(['/tmp']);
+    expect(codexWritableRoots({ writableRoots: ['/tmp', '/Volumes/AgentBot'] }, '/tmp')).toEqual(['/tmp', '/Volumes/AgentBot']);
+    expect(buildCodexArgs({}, opts())).toContain('--add-dir');
+    expect(buildCodexArgs({}, opts())).toContain('workspace-write');
+    for (const value of ['bad-json', '"/tmp"', '[""]', '[123]']) {
+      vi.stubEnv('LUCKAGENT_CODEX_WRITABLE_ROOTS', value);
+      expect(() => codexWritableRoots({}, '/tmp')).toThrow('LUCKAGENT_CODEX_WRITABLE_ROOTS');
+    }
+  });
+  it('grants an extra existing directory only for the configured bot while keeping the sandbox', () => {
+    const args = buildCodexArgs({ writableRoots: ['/tmp', '/tmp'] }, opts());
+    expect(args.filter(arg => arg === '--add-dir')).toHaveLength(1);
+    expect(args.slice(args.indexOf('--add-dir'), args.indexOf('--add-dir') + 2)).toEqual(['--add-dir', '/tmp']);
+    expect(args).toContain('workspace-write');
+    expect(args).not.toContain('--dangerously-bypass-approvals-and-sandbox');
+    expect(buildCodexArgs({}, opts())).not.toContain('--add-dir');
+    expect(codexWritableRoots({ writableRoots: [' storage ', 'storage'] }, '/tmp')).toEqual(['/tmp/storage']);
+    expect(() => codexWritableRoots({ writableRoots: [''] }, '/tmp')).toThrow('writableRoots');
+    expect(() => codexWritableRoots({ writableRoots: '/tmp' as any }, '/tmp')).toThrow('writableRoots');
+  });
   it('keeps subscription authentication separate from unrelated API keys', () => {
     const original = {
       OPENAI_API_KEY: 'image-key',

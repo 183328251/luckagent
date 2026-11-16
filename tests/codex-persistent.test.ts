@@ -79,10 +79,48 @@ afterEach(async () => {
   fs.rmSync(root, { recursive: true, force: true });
 });
 describe('persistent Codex runtime', () => {
+  it('inherits global directory grants for a bot with no per-bot configuration', async () => {
+    vi.stubEnv('LUCKAGENT_CODEX_WRITABLE_ROOTS', '["/Volumes/AgentBot"]');
+    const output = collect(runtime.startExecution(options('hello', sid)));
+    await tick();
+    expect(client.calls.find(c => c.method === 'thread/resume')?.params.config).toEqual({
+      'sandbox_workspace_write.writable_roots': ['/Volumes/AgentBot'],
+    });
+    expect(client.calls.find(c => c.method === 'turn/start')?.params.sandboxPolicy).toEqual({
+      type: 'workspaceWrite', networkAccess: true,
+      writableRoots: [root, path.join(root, 'outputs'), '/Volumes/AgentBot'],
+    });
+    done();
+    await output;
+  });
+  it.each([undefined, sid])('keeps directory grants on thread start/resume and subsequent turns (%s)', async sessionId => {
+    runtime = new PersistentCodexExecutor({ name: 'test', codex: { writableRoots: ['/Volumes/AgentBot'] }, claude: {} } as any, log, client as any);
+    const first = collect(runtime.startExecution(options('hello', sessionId)));
+    await tick();
+    expect(client.calls.find(c => c.method === (sessionId ? 'thread/resume' : 'thread/start'))?.params).toMatchObject({
+      sandbox: 'workspace-write', approvalPolicy: 'never',
+      config: { 'sandbox_workspace_write.writable_roots': ['/Volumes/AgentBot'] },
+    });
+    done();
+    await first;
+    const second = collect(runtime.startExecution(options('again', sid)));
+    await tick();
+    for (const call of client.calls.filter(c => c.method === 'turn/start')) {
+      expect(call.params.sandboxPolicy).toEqual({
+        type: 'workspaceWrite', networkAccess: true,
+        writableRoots: [root, path.join(root, 'outputs'), '/Volumes/AgentBot'],
+      });
+    }
+    expect(client.calls.filter(c => c.method === 'turn/start')).toHaveLength(2);
+    done();
+    await second;
+  });
   it('emits actual model, last-call usage and zero cost without killing the persistent thread after a reply', async () => {
     const handle = runtime.startExecution(options());
     const output = collect(handle);
     await tick();
+    expect(client.calls.find(c => c.method === 'thread/start')?.params.config).toBeUndefined();
+    expect(client.calls.find(c => c.method === 'turn/start')?.params.sandboxPolicy.writableRoots).toEqual([root, path.join(root, 'outputs')]);
     done();
     const messages = await output;
     expect(messages.at(-1)).toMatchObject({

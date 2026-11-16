@@ -9,7 +9,7 @@ import type { TeamState } from '../../types.js';
 import { AsyncQueue } from '../../utils/async-queue.js';
 import type { ExecutionHandle, ExecutorOptions, SDKMessage } from '../claude/executor.js';
 import { CodexAppServerClient, type RpcNotification, type RpcRequest } from './app-server-client.js';
-import { buildCodexPrompt } from './executor.js';
+import { buildCodexPrompt, codexWritableRoots } from './executor.js';
 import { sharedClaudeInstructions } from './instructions.js';
 import { withCodexSessionStats } from './session-stats.js';
 
@@ -136,12 +136,16 @@ export class PersistentCodexExecutor extends EventEmitter {
   private async loadThread(options: ExecutorOptions): Promise<Scope> {
     const defaultModel = await this.resolveDefaultModel();
     if (options.outputsDir) fs.mkdirSync(options.outputsDir, { recursive: true });
+    const writableRoots = codexWritableRoots(this.config.codex ?? {}, options.cwd);
     const overrides = {
       cwd: options.cwd,
       model: options.model || defaultModel || null,
       modelProvider: 'openai',
       approvalPolicy: 'never',
       sandbox: 'workspace-write',
+      // Apply to thread start/resume as well as turns so native goal continuations
+      // inherit this bot's directory grants.
+      ...(writableRoots.length ? { config: { 'sandbox_workspace_write.writable_roots': writableRoots } } : {}),
       developerInstructions: sharedClaudeInstructions(options.cwd),
     };
     // Install the listener scope before resuming: native goals can emit events during resume.
@@ -280,7 +284,7 @@ export class PersistentCodexExecutor extends EventEmitter {
             sandboxPolicy: {
               type: 'workspaceWrite',
               networkAccess: true,
-              writableRoots: [options.cwd, ...(options.outputsDir ? [options.outputsDir] : [])],
+              writableRoots: [...new Set([options.cwd, ...(options.outputsDir ? [options.outputsDir] : []), ...codexWritableRoots(this.config.codex ?? {}, options.cwd)])],
             },
           });
           if (active.cancelled) {

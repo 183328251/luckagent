@@ -29,6 +29,26 @@ export function resolveCodexPath(explicit?: string): string {
   return 'codex';
 }
 
+export function codexWritableRoots(config: CodexBotConfig, cwd: string): string[] {
+  const roots = config.writableRoots ?? [];
+  if (!Array.isArray(roots) || roots.some(dir => typeof dir !== 'string' || !dir.trim())) {
+    throw new Error('codex.writableRoots must be an array of non-empty directory paths');
+  }
+  let shared: unknown = [];
+  const raw = process.env.LUCKAGENT_CODEX_WRITABLE_ROOTS?.trim();
+  if (raw) {
+    try { shared = JSON.parse(raw); }
+    catch { throw new Error('LUCKAGENT_CODEX_WRITABLE_ROOTS must be a JSON array of directory paths'); }
+  }
+  if (!Array.isArray(shared) || shared.some(dir => typeof dir !== 'string' || !dir.trim())) {
+    throw new Error('LUCKAGENT_CODEX_WRITABLE_ROOTS must be a JSON array of non-empty directory paths');
+  }
+  return [...new Set([...shared as string[], ...roots].map(dir => {
+    const value = dir.trim();
+    return path.resolve(cwd, value === '~' ? os.homedir() : value.startsWith('~/') ? path.join(os.homedir(), value.slice(2)) : value);
+  }))];
+}
+
 export function buildCodexArgs(config: CodexBotConfig, options: ExecutorOptions): string[] {
   const args = [
     '-a',
@@ -45,7 +65,7 @@ export function buildCodexArgs(config: CodexBotConfig, options: ExecutorOptions)
     'sandbox_workspace_write.network_access=true',
   ];
   for (const dir of new Set(
-    [options.outputsDir, path.resolve(options.cwd, 'inputs')].filter((v): v is string => !!v),
+    [options.outputsDir, path.resolve(options.cwd, 'inputs'), ...codexWritableRoots(config, options.cwd)].filter((v): v is string => !!v),
   )) {
     if (existsSync(dir)) args.push('--add-dir', dir);
   }

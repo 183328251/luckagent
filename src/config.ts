@@ -52,6 +52,8 @@ export interface CodexBotConfig {
   executable?: string;
   model?: string;
   reasoningEffort?: CodexReasoningEffort;
+  /** Extra directories this bot may write while keeping the workspace-write sandbox. */
+  writableRoots?: string[];
 }
 
 /** Shared config fields used by MessageBridge and Executors (platform-agnostic). */

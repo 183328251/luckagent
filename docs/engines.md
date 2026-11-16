@@ -111,6 +111,11 @@ PTY 后端需要本机可执行的 Claude CLI，可通过 `CLAUDE_EXECUTABLE_PAT
 切换时会开始新会话。旧 Claude 会话不会被 Codex 续接。
 
 执行权限为 `workspace-write`，可写 bot 工作目录与本次输出目录，允许网络访问；CLI 无交互审批。
+如需让所有 Codex bot 使用 NAS，在 `.env` 中设置
+`LUCKAGENT_CODEX_WRITABLE_ROOTS='["/Volumes/AgentBot"]'`，现有与新增 bot 都继承该目录授权。
+单个 bot 也可通过 `codex.writableRoots` 追加目录，例如 `"codex": {"writableRoots": ["/path/to/storage"]}`。
+全局与单个 bot 的目录合并去重，覆盖新建/恢复会话、后续回合和后台任务，保存后重启桥接生效。
+NAS 需事先挂载；未配置额外目录时保持原有目录限制，Claude 引擎不受此配置影响。
 不使用 `--dangerously-bypass-approvals-and-sandbox`。引擎排除继承的 OpenAI API Key 与 API 地址，
 强制使用 ChatGPT 登录；生图与语音 API 配置不变。
 
