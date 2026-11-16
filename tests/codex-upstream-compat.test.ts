@@ -21,15 +21,16 @@ function file(bots: FeishuBotJsonEntry[]) {
 }
 
 describe('Codex isolation from unified model connections', () => {
-  it('keeps existing Codex bots and inherited Codex engines off the global API connection', () => {
+  it('pins explicit Codex bots while inherited engines can follow the global connection', () => {
     expect(applyModelConnection(bot(), entry, cfg)).toEqual(bot());
     vi.stubEnv('LUCKAGENT_ENGINE', 'codex');
-    expect(botConnectionChoice({})).toBe('codex');
-    expect(applyModelConnection(bot(), { ...entry, engine: undefined }, cfg).engine).toBe('codex');
+    expect(botConnectionChoice({})).toBe('inherit');
+    expect(applyModelConnection(bot(), { ...entry, engine: undefined }, cfg).engine).toBe('deepseek');
+    expect(applyModelConnection(bot(), { ...entry, engine: undefined }, {}).engine).toBe('codex');
     expect(connectionUsers({ ...cfg, feishuBots: [entry] }, 'gateway')).toEqual([]);
     expect(engineSettingsOverview(entry, bot(), cfg).engineSettingsPending).toBe(false);
     validateConnectionSelection('codex', cfg);
-    expect(() => validateConnectionSelection('codex', cfg, true)).toThrow();
+    validateConnectionSelection('codex', cfg, true);
   });
   it('permits an explicit switch from Codex to an API connection and back', () => {
     const p = file([entry]);

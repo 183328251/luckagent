@@ -16,17 +16,18 @@ export interface ModelConnection {
 }
 
 export function validateConnectionSelection(value: unknown, cfg: BotsJsonNewFormat, global = false): void {
-  if (value === undefined || value === null || value === '' || value === 'local' || value === 'legacy' || (!global && value === 'codex') || (!global && value === 'inherit')) return;
+  if (value === undefined || value === null || value === '' || value === 'local' || value === 'legacy' || value === 'codex' || (!global && value === 'inherit')) return;
   if (typeof value !== 'string' || !cfg.modelConnections?.some(c => c.id === value)) {
     throw new Error('请选择有效的模型连接');
   }
 }
 
-/** Absent fields on legacy compat bots must not opt them into a new global connection. */
+/** Explicit engines remain pinned; inherited Codex follows the global default. */
 export function botConnectionChoice(entry: Pick<FeishuBotJsonEntry, 'engine' | 'modelConnection'>): string {
   if (entry.modelConnection) return entry.modelConnection;
   const engine = entry.engine || process.env.LUCKAGENT_ENGINE || 'claude';
-  if (engine === 'codex') return 'codex';
+  if (entry.engine === 'codex') return 'codex';
+  if (entry.engine === 'claude') return 'legacy';
   return engine === 'deepseek' || engine === 'minimax' ? 'legacy' : 'inherit';
 }
 

@@ -179,9 +179,10 @@ export default function BotFormDrawer({
   const connectionChoice = Form.useWatch('modelConnection', form);
   const legacySelection = connectionChoice === 'legacy' || (connectionChoice === 'inherit' && connections?.defaultConnection === 'legacy');
   const legacyCompatModel = legacySelection && ['deepseek', 'minimax'].includes(legacyEngine || connections?.legacyDefaultEngine || 'claude');
-  const selectedConnection = connections?.connections.find(c => c.id === (connectionChoice === 'inherit' ? connections.defaultConnection : connectionChoice));
+  const resolvedChoice = connectionChoice === 'inherit' ? connections?.defaultConnection : connectionChoice;
+  const selectedConnection = connections?.connections.find(c => c.id === resolvedChoice);
   const provider = selectedConnection?.provider;
-  const engine = connectionChoice === 'codex' ? 'codex'
+  const engine = resolvedChoice === 'codex' ? 'codex'
     : legacySelection ? legacyEngine || defaultEngine
       : provider === 'deepseek' || provider === 'minimax' ? provider : 'claude';
   const botName = Form.useWatch('name', form);

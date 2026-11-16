@@ -19,7 +19,7 @@ vi.mock('../src/api/claude-auth-status.js', async importOriginal => {
 });
 
 const connection = { id: 'gateway', name: '灵眸', baseUrl: 'https://api.example.test', model: 'test-model', apiKey: 'secret-test-key' };
-const entry: FeishuBotJsonEntry = { name: 'demo', engine: 'claude', defaultWorkingDirectory: '/tmp/demo', feishuAppId: 'app', feishuAppSecret: 'secret' };
+const entry: FeishuBotJsonEntry = { name: 'demo', defaultWorkingDirectory: '/tmp/demo', feishuAppId: 'app', feishuAppSecret: 'secret' };
 function bot(): BotConfig {
   return { name: 'demo', engine: 'claude', feishu: { appId: 'app', appSecret: 'secret' }, claude: { defaultWorkingDirectory: '/tmp/demo', model: 'old-model', apiKey: 'old-key', maxTurns: undefined, maxBudgetUsd: undefined, backend: 'sdk', outputsBaseDir: '/tmp', downloadsDir: '/tmp' } };
 }
@@ -178,6 +178,26 @@ describe('admin model connection lifecycle', () => {
     expect(r.data.connections[0].hasApiKey).toBe(true);
     expect(fs.statSync(file).mode & 0o777).toBe(0o600);
     expect(JSON.parse(fs.readFileSync(file, 'utf8')).peers).toHaveLength(1);
+  });
+  it('saves global Codex, applies it to inherited bots and preserves explicit bindings', async () => {
+    vi.stubEnv('LUCKAGENT_ENGINE', 'codex');
+    const bots = [
+      { ...entry, name: 'inherited', engine: undefined },
+      { ...entry, name: 'fixed-codex', engine: 'codex' },
+      { ...entry, name: 'fixed-local', modelConnection: 'local' },
+      { ...entry, name: 'fixed-api', modelConnection: 'gateway' },
+      { ...entry, name: 'fixed-claude', engine: 'claude' },
+    ];
+    fs.writeFileSync(file, JSON.stringify({ feishuBots: bots, modelConnections: [connection] }));
+    expect((await request('PUT', '/default', { connection: 'codex' })).status).toBe(200);
+    const listing = (await request('GET')).data;
+    expect(listing.defaultConnection).toBe('codex');
+    expect(listing.inheritedBots).toEqual(['inherited']);
+    expect(JSON.parse(fs.readFileSync(file, 'utf8')).feishuBots).toEqual(JSON.parse(JSON.stringify(bots)));
+    vi.stubEnv('BOTS_CONFIG', file);
+    expect(loadAppConfig().feishuBots.map(resolveEngineName)).toEqual(['codex', 'codex', 'claude', 'claude', 'claude']);
+    await request('PUT', '/default', { connection: 'local' });
+    expect(loadAppConfig().feishuBots.map(resolveEngineName)).toEqual(['claude', 'codex', 'claude', 'claude', 'claude']);
   });
   it('distinguishes saved local selections, running local bots and ambiguous legacy auth', async () => {
     vi.stubEnv('LUCKAGENT_ENGINE', 'claude');

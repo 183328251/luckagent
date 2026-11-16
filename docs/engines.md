@@ -41,7 +41,8 @@ Claude 与兼容 API 接入共用 Claude Code 运行时；Codex 订阅使用独�
 
 模型优先级：会话 `/model` 临时选择 → bot 的「模型覆盖」→ 连接默认模型。
 选择 DeepSeek / MiniMax 连接时自动用 SDK 后端；选择连接不会删除 bot 原有的旧引擎配置，日后可切回兼容模式。
-原有 Codex bot（包括全局 `LUCKAGENT_ENGINE=codex`）自动解析为独立 Codex 连接，无需改写 bots.json。
+显式指定 `engine=codex` 的原有 bot 自动解析为独立 Codex 连接；显式指定 Claude 的原有 bot 保留旧配置，均不随全局连接改变。
+全局「默认模型连接」支持 GPT（Codex 订阅）。未单独指定引擎或选择「继承全局默认连接」的 bot 随全局切换；旧全局 `LUCKAGENT_ENGINE=codex` 在默认连接为「兼容旧配置」时继续生效，无需逐个设置。
 批量切换到 Claude / Codex 时分别固定为本机 Claude 登录 / Codex 订阅；只对引擎实际变化的 bot 清除旧模型与推理强度覆盖，已有会话的 `/model` 设置保留。
 聊天中的 `/model claude|deepseek|minimax` 仍是旧引擎的临时切换命令，不是后台连接选择器；跨引擎切换按对应旧凭证解析，长期使用请在后台绑定连接。
 
@@ -49,7 +50,7 @@ Claude 与兼容 API 接入共用 Claude Code 运行时；Codex 订阅使用独�
 沿用旧配置的 bot 会在各自工作目录查询认证；确认使用同一官方账号后，显示在本机登录的使用列表中，不改写 bot 配置。查询失败或认证不一致时单独列为未确认。
 
 新建机器人（包括飞书接入向导）默认明确选择继承全局连接。
-原先未设置 `modelConnection` 的 Claude bot 保留先前的默认连接继承行为；
+原先未设置 `modelConnection` 且未显式指定引擎的 bot 按全局默认解析；显式指定 Claude / Codex 的 bot 保留单独选择。
 未设置该字段的旧 DeepSeek / MiniMax bot（包括通过 `LUCKAGENT_ENGINE` 默认选中的 bot）继续使用旧配置。
 这类 bot 会在后台标为「兼容旧配置」，只有主动选择新连接或继承全局才迁移。
 
@@ -76,7 +77,7 @@ Claude 与兼容 API 接入共用 Claude Code 运行时；Codex 订阅使用独�
 
 连接存于本机 `bots.json.modelConnections`，文件权限为 `0600`，Key 为本地明文。
 `provider` 指定适配服务商；缺少该字段的原有连接继续按自定义 Claude 兼容接口处理。
-`defaultModelConnection` 保存全局连接 ID、`local` 或 `legacy`；bot 的 `modelConnection` 还可为 `inherit` 或 `codex`；`codex` 仅用于单个 bot。
+`defaultModelConnection` 保存全局连接 ID、`local`、`codex` 或 `legacy`；bot 的 `modelConnection` 还可为 `inherit`。
 不会修改 `~/.claude/settings.json`，也不会把 Key 放进 API 响应或连接测试的错误信息。
 
 各服务商模型能力仍以实际模型为准；管理台费用可能是运行时估算，实际账单以服务商为准。
