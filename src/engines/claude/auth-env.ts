@@ -1,3 +1,4 @@
+import { modelConnectionEngine } from '../../model-connections.js';
 import type { BotConfigBase } from '../../config.js';
 
 /**
@@ -27,9 +28,9 @@ export const COMPAT_PROVIDERS: Record<'deepseek' | 'minimax', CompatProvider> = 
     engine: 'deepseek',
     displayName: 'DeepSeek',
     defaultBaseUrl: 'https://api.deepseek.com/anthropic',
-    defaultModel: 'deepseek-v4-flash',
+    defaultModel: 'deepseek-flash',
     models: [
-      { id: 'deepseek-v4-flash', note: '快 · 便宜 · 默认' },
+      { id: 'deepseek-flash', note: 'V4.1 Flash 1017 · 快 · 便宜 · 默认' },
       { id: 'deepseek-v4-pro', note: '更强推理' },
     ],
     keyEnv: 'DEEPSEEK_API_KEY',
@@ -57,8 +58,15 @@ export function compatProviderFor(engine: string | undefined): CompatProvider | 
 
 export const DEEPSEEK_DEFAULT_BASE_URL = COMPAT_PROVIDERS.deepseek.defaultBaseUrl;
 export const DEEPSEEK_DEFAULT_MODEL = COMPAT_PROVIDERS.deepseek.defaultModel;
-// vision-exp is a valid endpoint id but intentionally absent from UI pickers.
-export const DEEPSEEK_KNOWN_MODELS = ['deepseek-v4-flash', 'deepseek-v4-pro', 'deepseek-v4-flash-vision-exp'];
+// `deepseek-flash` is the official id (now served by DeepSeek-V4.1-Flash-1017).
+// The legacy v4-flash ids are retired upstream but still accepted — DeepSeek
+// routes them to the current Flash — so existing configs keep validating.
+export const DEEPSEEK_KNOWN_MODELS = [
+  'deepseek-flash',
+  'deepseek-v4-pro',
+  'deepseek-v4-flash',
+  'deepseek-v4-flash-vision-exp',
+];
 
 /**
  * Auth-related env vars to inject into the spawned Claude Code process for
@@ -74,6 +82,31 @@ export const DEEPSEEK_KNOWN_MODELS = ['deepseek-v4-flash', 'deepseek-v4-pro', 'd
  *   env passthrough, apiKeyHelper …).
  */
 export function resolveClaudeAuthEnv(config: BotConfigBase): Record<string, string> | undefined {
+  const connection = config.claude.connection;
+  if (connection && modelConnectionEngine(connection) === (config.engine || 'claude')) {
+    // Pin routing and authentication per child, including when host settings
+    // contain another gateway, OAuth token or provider mode.
+    const isolated = {
+      CLAUDE_CODE_USE_BEDROCK: '0', CLAUDE_CODE_USE_VERTEX: '0', CLAUDE_CODE_USE_FOUNDRY: '0',
+      CLAUDE_CODE_OAUTH_TOKEN: '', CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR: '', CLAUDE_CODE_API_KEY_FILE_DESCRIPTOR: '',
+      ANTHROPIC_MODEL: config.claude.model || '',
+      ANTHROPIC_DEFAULT_OPUS_MODEL: '', ANTHROPIC_DEFAULT_SONNET_MODEL: '', ANTHROPIC_DEFAULT_HAIKU_MODEL: '',
+      ANTHROPIC_SMALL_FAST_MODEL: '',
+    };
+    if (connection === 'local') return {
+      ...isolated, ANTHROPIC_BASE_URL: 'https://api.anthropic.com',
+      ANTHROPIC_API_KEY: '', ANTHROPIC_AUTH_TOKEN: '',
+    };
+    if (!connection.apiKey) throw new Error(`Bot "${config.name}": 模型连接「${connection.name}」尚未填写 API Key`);
+    return {
+      ...isolated, ANTHROPIC_BASE_URL: connection.baseUrl,
+      ANTHROPIC_AUTH_TOKEN: connection.apiKey, ANTHROPIC_API_KEY: connection.apiKey,
+      CLAUDE_CODE_ATTRIBUTION_HEADER: '0',
+      // Any non-empty string (including "0") enables this flag. An empty
+      // value explicitly turns it off for this connection's subprocess.
+      CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: connection.disableNonessentialTraffic ? '1' : '',
+    };
+  }
   const provider = compatProviderFor(config.engine);
   if (provider) {
     const block = provider.engine === 'minimax' ? config.minimax : config.deepseek;
@@ -93,4 +126,12 @@ export function resolveClaudeAuthEnv(config: BotConfigBase): Record<string, stri
     return { ANTHROPIC_API_KEY: config.claude.apiKey };
   }
   return undefined;
+}
+
+/** Pin this non-secret preference in CLI settings too, above user/project env.
+ * Never copy the full authEnv into settings (SDK settings appear in argv).
+ */
+export function nonessentialTrafficSettings(env?: Readonly<Record<string, string | undefined>>): { env?: Record<string, string> } {
+  const value = env?.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC;
+  return value === undefined ? {} : { env: { CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: value } };
 }

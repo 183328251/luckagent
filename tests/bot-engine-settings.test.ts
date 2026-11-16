@@ -34,6 +34,7 @@ describe('bot engine changes', () => {
     const result = readBotsConfig(file);
     expect(result.feishuBots?.[0]).toEqual({
       ...bot('a', 'claude'),
+      modelConnection: 'local',
       model: undefined,
       codex: { executable: '/keep/codex' },
     });
@@ -79,7 +80,7 @@ describe('bot engine changes', () => {
     const file = fixture([{ name: 'a', codex: { model: 'old', reasoningEffort: 'high' } }], true);
     expect(configuredEngine({})).toBe('codex');
     batchSetBotEngine(file, ['a'], 'claude');
-    expect(readBotsConfig(file).feishuBots?.[0]).toEqual({ name: 'a', engine: 'claude' });
+    expect(readBotsConfig(file).feishuBots?.[0]).toEqual({ name: 'a', engine: 'claude', modelConnection: 'local' });
   });
   it('reports saved configuration separately from running settings', () => {
     const live = { engine: 'codex', claude: {}, codex: { model: 'old' } } as any;

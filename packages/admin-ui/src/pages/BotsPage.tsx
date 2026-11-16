@@ -230,6 +230,7 @@ export default function BotsPage({ onChanged }: { onChanged: () => void }) {
                   >
                     {b.running ? { claude: 'Claude', codex: 'Codex' }[b.engine] || b.engine : '未运行'}
                   </Tag>
+                  <Typography.Text type="secondary">{b.connectionName}</Typography.Text>
                   {b.engineSettingsPending && <Tag color="orange">待重启</Tag>}
                   {b.running && (
                     <>

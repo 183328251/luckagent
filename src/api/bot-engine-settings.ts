@@ -1,4 +1,5 @@
-import type { BotConfigBase, FeishuBotJsonEntry } from '../config.js';
+import { configuredConnectionEngine, selectedModelConnection } from '../model-connections.js';
+import type { BotConfigBase, FeishuBotJsonEntry, BotsJsonNewFormat } from '../config.js';
 import type { EngineName } from '../engines/types.js';
 
 const ENGINES: EngineName[] = ['claude', 'codex', 'deepseek', 'minimax'];
@@ -18,15 +19,17 @@ export function clearSubscriptionModelOverrides(entry: Record<string, unknown>):
   }
 }
 
-export function engineSettingsOverview(entry: FeishuBotJsonEntry, live?: BotConfigBase) {
-  const engine = configuredEngine(entry);
-  const model = engine === 'codex' ? entry.codex?.model : engine === 'claude' ? entry.model : entry[engine]?.model;
+export function engineSettingsOverview(entry: FeishuBotJsonEntry, live?: BotConfigBase, cfg: BotsJsonNewFormat = {}) {
+  const engine = configuredConnectionEngine(entry, cfg);
+  const selected = selectedModelConnection(entry, cfg);
+  const connection = cfg.modelConnections?.find(c => c.id === selected);
+  const model = connection ? entry.model || connection.model : engine === 'codex' ? entry.codex?.model : engine === 'claude' ? entry.model : entry[engine]?.model;
   const effort = engine === 'codex' ? entry.codex?.reasoningEffort || null : null;
   const expectedModel =
     engine === 'claude'
-      ? model || process.env.CLAUDE_MODEL || process.env.ANTHROPIC_MODEL || null
+      ? model || (selected === 'local' ? null : process.env.CLAUDE_MODEL || process.env.ANTHROPIC_MODEL || null)
       : engine === 'deepseek'
-        ? model || process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash'
+        ? model || process.env.DEEPSEEK_MODEL || 'deepseek-flash'
         : engine === 'minimax'
           ? model || process.env.MINIMAX_MODEL || 'MiniMax-M3'
           : model || null;
@@ -37,7 +40,7 @@ export function engineSettingsOverview(entry: FeishuBotJsonEntry, live?: BotConf
         : liveEngine === 'claude'
           ? live.claude.model
           : liveEngine === 'deepseek'
-            ? live.deepseek?.model || 'deepseek-v4-flash'
+            ? live.deepseek?.model || 'deepseek-flash'
             : live.minimax?.model || 'MiniMax-M3') || null
     : null;
   return {

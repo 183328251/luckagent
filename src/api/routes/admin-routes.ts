@@ -1,23 +1,27 @@
 import { getClaudeSubscriptionUsage } from '../../engines/claude/subscription-usage.js';
+import { handleRestartRoutes } from './restart-routes.js';
+import { queryClaudeAuthStatus } from '../claude-auth-status.js';
+import { configuredConnectionEngine, selectedModelConnection } from '../../model-connections.js';
+import { handleModelConnectionRoutes } from './model-connection-routes.js';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import * as dotenv from 'dotenv';
 import { execFile } from 'node:child_process';
 import type * as http from 'node:http';
-import { engineSettingsOverview, configuredEngine } from '../bot-engine-settings.js';
+import { engineSettingsOverview } from '../bot-engine-settings.js';
 import { readBotsConfig } from '../bots-config-writer.js';
 import { expandUserPath, ORIGINAL_ENV_KEYS, projectsRoot } from '../../config.js';
 import { COMPAT_PROVIDERS, resolveEngineName } from '../../engines/index.js';
 import { EDITABLE_DEFAULTS, displayDefault, validateDefaultsUpdate, writeEnvUpdates } from '../env-defaults.js';
-import { claudeProjectsDir, physicalCwd } from '../../engines/claude/session-lister.js';
+import { physicalCwd } from '../../engines/claude/session-lister.js';
 import { SkillUsageTracker } from '../skill-usage.js';
 import { MemoryRecallTracker } from '../memory-recall.js';
 import { buildAttention, unsetGroupSummaries } from '../attention.js';
 import { buildFeed, memoryActivity, recentMemories, skillActivity, taskBreakdown, topSkills } from '../dashboard.js';
-import { MEMORY_INDEX_LIMITS, parseMemoryFrontmatter, readBotMemory, searchMemories, stripFrontmatter } from '../memory-view.js';
+import { MEMORY_INDEX_LIMITS, memoryDirCandidates, parseMemoryFrontmatter, readBotMemory, searchMemories, stripFrontmatter } from '../memory-view.js';
 
-export { parseMemoryIndex, type MemoryIndexEntry } from '../memory-view.js';
+export { memoryDirCandidates, parseMemoryIndex, type MemoryIndexEntry } from '../memory-view.js';
 import { getCodexModelCatalog } from '../../engines/codex/model-catalog.js';
 import { getSubscriptionUsage } from '../../engines/codex/subscription-usage.js';
 import { jsonResponse, parseJsonBody } from './helpers.js';
@@ -33,7 +37,6 @@ const LOG_LINE_CAP = 1000;
 const LOG_TAIL_BYTES = 512 * 1024;
 const FEISHU_TOKEN_URL = 'https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal';
 
-let lastRestartRequestAt = 0;
 
 /**
  * 密钥三态：进程环境（已生效）/仅磁盘 .env（待重启生效）/都没有（未配置）。
@@ -160,28 +163,28 @@ function readDiskEnv(): Record<string, string> {
   }
 }
 
-/**
- * image-gen backend (same resolution as scripts/gen.py). Login is judged by the
- * auth file only — a stale login still reads as logged in; the live probe
- * (/admin/api/image-gen/probe, `luckagent doctor`) runs `codex login status`.
- */
-function imageGenStatus(diskEnv: Record<string, string>) {
-  const configured = (process.env.IMAGE_GEN_PROVIDER || diskEnv.IMAGE_GEN_PROVIDER || '').trim().toLowerCase();
-  const codexHome = process.env.CODEX_HOME || path.join(os.homedir(), '.codex');
-  const codexInstalled = onPath(process.env.CODEX_BIN || 'codex');
-  const codexLoggedIn = codexInstalled && fs.existsSync(path.join(codexHome, 'auth.json'));
-  const hasArk = !!(process.env.ARK_API_KEY || diskEnv.ARK_API_KEY);
+function savedValue(diskEnv: Record<string, string>, key: string): string {
+  return (ORIGINAL_ENV_KEYS.has(key) ? process.env[key] : diskEnv[key]) || '';
+}
+
+/** Saved image parameters, respecting pinned process values; auth comes from CLI. */
+async function imageGenStatus(diskEnv: Record<string, string>) {
+  const configured = savedValue(diskEnv, 'IMAGE_GEN_PROVIDER').trim().toLowerCase();
+  const codex = await cachedCodexProbe();
+  const codexInstalled = codex.installed;
+  const codexLoggedIn = codex.loggedIn;
+  const hasArk = !!savedValue(diskEnv, 'ARK_API_KEY');
   const provider =
     configured === 'codex' || configured === 'seedream' ? configured
       : codexLoggedIn ? 'codex'
         : hasArk ? 'seedream'
           : null;
-  return { configured: configured || null, provider, codexInstalled, codexLoggedIn, hasArkApiKey: hasArk };
+  return { configured: configured || null, provider, codexInstalled, codexLoggedIn, codexAuthError: codex.error, hasArkApiKey: hasArk };
 }
 
 /** Video generation (seedance-video): Ark key required; TOS only for local reference media. Saved (.env) values win. */
 function videoGenStatus(diskEnv: Record<string, string>) {
-  const has = (k: string) => !!(diskEnv[k]?.trim() || process.env[k]?.trim());
+  const has = (k: string) => !!savedValue(diskEnv, k).trim();
   const tos = { accessKey: has('TOS_ACCESS_KEY'), secretKey: has('TOS_SECRET_KEY'), bucket: has('TOS_BUCKET') };
   return {
     hasArkApiKey: has('ARK_API_KEY'),
@@ -202,7 +205,9 @@ function probeTos(diskEnv: Record<string, string>): Promise<{ ok: boolean; messa
   if (!script) return Promise.resolve({ ok: false, message: '找不到 seedance-video 技能脚本（重跑 luckagent update 同步技能）' });
   const env: NodeJS.ProcessEnv = { ...process.env };
   for (const k of TOS_KEYS) {
-    if (diskEnv[k]?.trim()) env[k] = diskEnv[k].trim();
+    const value = savedValue(diskEnv, k).trim();
+    if (value) env[k] = value;
+    else delete env[k];
   }
   return new Promise((resolve) => {
     execFile('python3', [script, '--probe'], { env, timeout: 45_000 }, (err, stdout, stderr) => {
@@ -213,7 +218,7 @@ function probeTos(diskEnv: Record<string, string>): Promise<{ ok: boolean; messa
 }
 
 /** Live `codex login status` probe for the admin console's 「重新检测」 button. */
-function probeCodex(): Promise<{ installed: boolean; loggedIn: boolean; version: string | null; detail: string }> {
+function probeCodex(): Promise<{ installed: boolean; loggedIn: boolean; version: string | null; detail: string; error?: string }> {
   const bin = process.env.CODEX_BIN || 'codex';
   const run = (args: string[]) =>
     new Promise<{ ok: boolean; out: string }>((resolve) => {
@@ -230,37 +235,22 @@ function probeCodex(): Promise<{ installed: boolean; loggedIn: boolean; version:
       installed: v.ok || st.ok,
       loggedIn: st.ok && text.includes('logged in') && !text.includes('not logged in'),
       version: v.ok ? v.out.split(/\s+/).pop() || null : null,
-      detail: st.out.slice(0, 200),
+      detail: st.ok && text.includes('logged in') && !text.includes('not logged in') ? 'CLI 确认已登录' : text.includes('not logged in') ? 'CLI 确认未登录' : '认证状态未确认',
+      ...(!st.ok && !text.includes('not logged in') ? { error: 'Codex 认证查询失败' } : {}),
     };
   });
 }
 
+let codexProbeCache: { expires: number; result: ReturnType<typeof probeCodex> } | undefined;
+function cachedCodexProbe(refresh = false): ReturnType<typeof probeCodex> {
+  if (!refresh && codexProbeCache && codexProbeCache.expires > Date.now()) return codexProbeCache.result;
+  const result = probeCodex();
+  codexProbeCache = { expires: Date.now() + 60000, result };
+  return result;
+}
+
 /** Effective-config view: whitelisted, secrets reduced to set/tail hints. */
-function effectiveConfig(ctx: RouteContext): Record<string, unknown> {
-  const claudeCliInstalled = (): boolean => onPath('claude');
-  // Subscription-login state as cached by the Claude CLI in ~/.claude.json
-  // (refreshed whenever claude runs — profileFetchedAt tells how fresh).
-  const claudeAuthStatus = () => {
-    const cliInstalled = claudeCliInstalled();
-    try {
-      const raw = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.claude.json'), 'utf-8'));
-      const oa = raw?.oauthAccount;
-      if (!oa || typeof oa !== 'object') return { cliInstalled, loggedIn: false };
-      return {
-        cliInstalled,
-        loggedIn: true,
-        email: typeof oa.emailAddress === 'string' ? oa.emailAddress : undefined,
-        billingType: typeof oa.billingType === 'string' ? oa.billingType : undefined,
-        seatTier: typeof oa.seatTier === 'string' ? oa.seatTier : undefined,
-        rateLimitTier: typeof oa.userRateLimitTier === 'string' ? oa.userRateLimitTier : undefined,
-        hasAvailableSubscription: typeof raw.hasAvailableSubscription === 'boolean' ? raw.hasAvailableSubscription : undefined,
-        trialEndsAt: typeof oa.claudeCodeTrialEndsAt === 'string' ? oa.claudeCodeTrialEndsAt : undefined,
-        profileFetchedAt: typeof oa.profileFetchedAt === 'string' ? oa.profileFetchedAt : undefined,
-      };
-    } catch {
-      return { cliInstalled, loggedIn: false };
-    }
-  };
+async function effectiveConfig(ctx: RouteContext): Promise<Record<string, unknown>> {
   const readCoreTokenFile = (): string | undefined => {
     try {
       const v = fs.readFileSync(path.join(os.homedir(), '.luckagent-core', 'token'), 'utf-8').trim();
@@ -322,8 +312,8 @@ function effectiveConfig(ctx: RouteContext): Record<string, unknown> {
       volcengineTts: envHint('VOLCENGINE_TTS_ACCESS_KEY'),
       elevenlabs: envHint('ELEVENLABS_API_KEY'),
     },
-    claudeAuth: claudeAuthStatus(),
-    imageGen: imageGenStatus(diskEnv),
+    claudeAuth: await queryClaudeAuthStatus(),
+    imageGen: await imageGenStatus(diskEnv),
   };
 }
 
@@ -385,15 +375,6 @@ export function scanSkillsDir(dir: string): SkillInfo[] {
   return out;
 }
 
-/** Claude Code keys per-project data dirs by the sanitized workdir path
- *  (claudeProjectsDir — the exact rule). The two older guesses stay as
- *  fallbacks for dirs written by earlier Claude Code versions. Exported for tests. */
-export function memoryDirCandidates(workDir: string): string[] {
-  const root = path.join(os.homedir(), '.claude', 'projects');
-  const exact = path.join(claudeProjectsDir(workDir), 'memory');
-  const legacy = [workDir.replaceAll('/', '-'), workDir.replace(/[/.]/g, '-')].map((c) => path.join(root, c, 'memory'));
-  return [...new Set([exact, ...legacy])];
-}
 
 function safeLeafName(v: unknown): string | null {
   if (typeof v !== 'string' || !v) return null;
@@ -433,6 +414,8 @@ export async function handleAdminRoutes(
   method: string,
   url: string,
 ): Promise<boolean> {
+  if (await handleRestartRoutes(ctx, req, res, method, url)) return true;
+  if (await handleModelConnectionRoutes(ctx, req, res, method, url)) return true;
   const { registry, scheduler, logger, botsConfigPath, activityStore } = ctx;
 
 
@@ -696,17 +679,20 @@ export async function handleAdminRoutes(
     const toMb = (b: number) => Math.round((b / 1024 / 1024) * 10) / 10;
 
     // Configured entries vs running registry — the diff is the failed set.
-    let configured: Array<{ name: string; description?: string; engine: string; workDir: string | null; entry: import('../../config.js').FeishuBotJsonEntry }> = [];
+    let configured: Array<{ name: string; description?: string; engine: string; connectionName: string; workDir: string | null; entry: import('../../config.js').FeishuBotJsonEntry }> = [];
+    let savedConfig: import('../../config.js').BotsJsonNewFormat = {};
     let configDirty = false;
     let configError: string | null = null;
     if (botsConfigPath) {
       try {
         const cfg = readBotsConfig(botsConfigPath);
+        savedConfig = cfg;
         configured = (cfg.feishuBots || []).map((b) => ({
           name: b.name,
           description: b.description,
-          engine: configuredEngine(b),
+          engine: configuredConnectionEngine(b, cfg),
           entry: b,
+          connectionName: selectedModelConnection(b, cfg) === 'codex' ? 'GPT（Codex 订阅）' : selectedModelConnection(b, cfg) === 'local' ? '本机 Claude 登录' : cfg.modelConnections?.find(c => c.id === selectedModelConnection(b, cfg))?.name || '兼容旧配置',
           workDir: b.defaultWorkingDirectory || null,
         }));
         const mtime = fs.statSync(botsConfigPath).mtimeMs;
@@ -742,8 +728,9 @@ export async function handleAdminRoutes(
       return {
         name: c.name,
         description: c.description,
-        ...engineSettingsOverview(c.entry, bot?.config),
+        ...engineSettingsOverview(c.entry, bot?.config, savedConfig),
         engine: bot ? resolveEngineName(bot.config) : c.engine,
+        connectionName: bot ? (resolveEngineName(bot.config) === 'codex' ? 'GPT（Codex 订阅）' : bot.config.claude.connection === 'local' ? '本机 Claude 登录' : bot.config.claude.connection?.name || '兼容旧配置') : c.connectionName,
         // effective default model (bots.json → .env default); null on claude = follow the plan
         model: runningInfo.get(c.name)?.model ?? null,
         workDir: c.workDir,
@@ -773,6 +760,11 @@ export async function handleAdminRoutes(
       .slice(0, 10)
       .map((e) => ({ botName: e.botName, chatId: e.chatId, errorMessage: e.errorMessage || null, timestamp: e.timestamp }));
 
+    const currentConfig = ctx.adminRuntime?.configStatus();
+    if (currentConfig) {
+      configDirty = currentConfig.configDirty;
+      configError = configError || currentConfig.configErrors.join("；") || null;
+    }
     const core = await probeCore();
 
     jsonResponse(res, 200, {
@@ -860,27 +852,6 @@ export async function handleAdminRoutes(
     return true;
   }
 
-  // POST /admin/api/restart — breadcrumb + exit(0); PM2 autorestart brings us back
-  if (method === 'POST' && url === '/admin/api/restart') {
-    const now = Date.now();
-    if (now - lastRestartRequestAt < 30_000) {
-      jsonResponse(res, 429, { error: 'restart already in progress' });
-      return true;
-    }
-    lastRestartRequestAt = now;
-    try {
-      const dir = process.env.SESSION_STORE_DIR || path.join(os.homedir(), '.luckagent');
-      fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(path.join(dir, 'last-restart.json'), JSON.stringify({ restartedAt: Math.floor(now / 1000) }) + '\n');
-    } catch (err: any) {
-      logger.warn({ err: err?.message }, 'restart breadcrumb write failed');
-    }
-    logger.warn('admin console requested a bridge restart — exiting for PM2 to respawn');
-    jsonResponse(res, 202, { restarting: true, etaSec: 5 });
-    setTimeout(() => process.exit(0), 500);
-    return true;
-  }
-
   // GET /admin/api/config/defaults — the console-editable global defaults.
   // live = what the running bridge (and every bot session it spawned) uses;
   // disk = what .env holds now (differs after a save until the restart).
@@ -902,7 +873,7 @@ export async function handleAdminRoutes(
       },
       // CLAUDE_MODEL empty falls back to ANTHROPIC_MODEL before "follow the plan"
       anthropicModel: process.env.ANTHROPIC_MODEL?.trim() || null,
-      imageGen: imageGenStatus(diskEnv),
+      imageGen: await imageGenStatus(diskEnv),
       videoGen: videoGenStatus(diskEnv),
     });
     return true;
@@ -958,15 +929,15 @@ export async function handleAdminRoutes(
     return true;
   }
 
-  // GET /admin/api/image-gen/probe — live `codex login status` (the config view only checks the auth file)
+  // GET /admin/api/image-gen/probe — explicitly refresh the cached CLI query.
   if (method === 'GET' && url === '/admin/api/image-gen/probe') {
-    jsonResponse(res, 200, await probeCodex());
+    jsonResponse(res, 200, await cachedCodexProbe(true));
     return true;
   }
 
   // GET /admin/api/config — read-only effective config (secrets masked)
   if (method === 'GET' && url === '/admin/api/config') {
-    jsonResponse(res, 200, effectiveConfig(ctx));
+    jsonResponse(res, 200, await effectiveConfig(ctx));
     return true;
   }
 

@@ -15,7 +15,7 @@ import {
 } from 'antd';
 import { useProjectsRoot } from '../hooks/useProjectsRoot';
 import { api } from '../api/client';
-import type { BotEntry, CodexModelCatalog } from '../api/types';
+import type { BotEntry, CodexModelCatalog, ModelConnectionsResponse } from '../api/types';
 import MemberPicker from '../components/MemberPicker';
 
 const MASK_PREFIX = '••••';
@@ -41,6 +41,10 @@ export default function BotFormDrawer({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const [connections, setConnections] = useState<ModelConnectionsResponse>();
+  const [connectionError, setConnectionError] = useState('');
+  const [initialConnectionChoice, setInitialConnectionChoice] = useState('inherit');
+  const [legacyEngine, setLegacyEngine] = useState<string>();
   const [form] = Form.useForm();
   const [initialEngine, setInitialEngine] = useState<string>();
   const [defaultEngine, setDefaultEngine] = useState('claude');
@@ -54,16 +58,26 @@ export default function BotFormDrawer({
     if (!open) return;
     form.resetFields();
     setInitialEngine(undefined);
+    form.setFieldValue('modelConnection', 'inherit');
+    setInitialConnectionChoice('inherit');
+    setLegacyEngine(undefined);
+    setConnections(undefined);
+    setConnectionError('');
+    void api.get<ModelConnectionsResponse>('/admin/api/model-connections').then(setConnections).catch(e => setConnectionError(e.message));
     if (editing) {
-      void api.get<{ config: BotEntry; configuredEngine?: string; defaultEngine?: string }>(`/api/bots/${encodeURIComponent(editing)}`).then((r) => {
+      void api.get<{ config: BotEntry; connectionChoice: string; configuredEngine?: string; defaultEngine?: string }>(`/api/bots/${encodeURIComponent(editing)}`).then((r) => {
         const cfg = r.config || {};
+        const choice = r.connectionChoice || cfg.modelConnection || 'inherit';
+        setInitialConnectionChoice(choice);
+        setLegacyEngine(cfg.engine);
         setDefaultEngine(r.defaultEngine || 'claude');
         setInitialEngine(r.configuredEngine || cfg.engine || r.defaultEngine || 'claude');
         form.setFieldsValue({
           ...cfg,
+          modelConnection: choice,
           groupOnlyAllowUsers: cfg.groupOnlyAllowUsers || [],
         });
-      });
+      }).catch(e => message.error(e.message));
     }
   }, [open, editing, form]);
 
@@ -74,7 +88,7 @@ export default function BotFormDrawer({
   // '' as "delete this key", so clearing the whitelist / model override etc.
   // actually removes it from bots.json instead of being ignored.
   const CLEARABLE = [
-    'engine', 'description', 'model', 'maxTurns', 'maxBudgetUsd', 'budgetLimitDaily',
+    'description', 'model', 'maxTurns', 'maxBudgetUsd', 'budgetLimitDaily',
     'maxConcurrentTasks', 'downloadsDir', 'ttsVoice', 'groupOnlyAllowUsers',
   ];
 
@@ -118,6 +132,9 @@ export default function BotFormDrawer({
   const onSubmit = async () => {
     const values = await form.validateFields();
     const payload = buildPayload(values);
+    delete payload.engine;
+    if (editing && payload.modelConnection === initialConnectionChoice) delete payload.modelConnection;
+    if (legacyCompatModel || engine === 'codex') delete payload.model;
     setLoading(true);
     try {
       if (editing) {
@@ -159,7 +176,14 @@ export default function BotFormDrawer({
     }
   };
 
-  const engine = Form.useWatch('engine', form) || defaultEngine;
+  const connectionChoice = Form.useWatch('modelConnection', form);
+  const legacySelection = connectionChoice === 'legacy' || (connectionChoice === 'inherit' && connections?.defaultConnection === 'legacy');
+  const legacyCompatModel = legacySelection && ['deepseek', 'minimax'].includes(legacyEngine || connections?.legacyDefaultEngine || 'claude');
+  const selectedConnection = connections?.connections.find(c => c.id === (connectionChoice === 'inherit' ? connections.defaultConnection : connectionChoice));
+  const provider = selectedConnection?.provider;
+  const engine = connectionChoice === 'codex' ? 'codex'
+    : legacySelection ? legacyEngine || defaultEngine
+      : provider === 'deepseek' || provider === 'minimax' ? provider : 'claude';
   const botName = Form.useWatch('name', form);
   const switchingEngine = !!editing && !!initialEngine && engine !== initialEngine && ['claude', 'codex'].includes(engine);
   const codexModel = Form.useWatch(['codex', 'model'], form) as string | undefined;
@@ -248,26 +272,19 @@ export default function BotFormDrawer({
             </Typography.Text>
           </Form.Item>
         )}
-        {editing ? (
-          <Form.Item name="engine" label="引擎（留空 = 用全局默认）">
-            <Select
-              allowClear
-              options={[
-                { value: 'claude', label: 'Claude Code' },
-                { value: 'deepseek', label: 'DeepSeek' },
-                { value: 'minimax', label: 'MiniMax' },
-                { value: 'codex', label: 'GPT（Codex 订阅）' },
-              ]}
-            />
-          </Form.Item>
-        ) : (
-          <Form.Item label="引擎">
-            <Typography.Text type="secondary">使用安装时选定的全局默认引擎（建好后可在「编辑」里按 bot 调整）</Typography.Text>
-          </Form.Item>
-        )}
-
+        {connectionError && <Alert type="error" message={`模型连接加载失败：${connectionError}`} />}
+        <Form.Item name="modelConnection" label="模型连接" rules={[{ required: true }]} extra="在「系统配置 → 模型接入」统一管理服务商、Key 和默认模型。保存后重启桥接生效。">
+          <Select disabled={!connections} options={[
+            { value: 'codex', label: 'GPT（Codex 订阅）' },
+            { value: 'inherit', label: '继承全局默认连接' },
+            { value: 'legacy', label: `兼容旧配置（${legacyEngine || connections?.legacyDefaultEngine || 'claude'}）` },
+            { value: 'local', label: '本机 Claude 登录（官方端点）' },
+            ...(connections?.connections || []).map(c => ({ value: c.id, label: `${c.name} · ${c.model}${c.hasApiKey ? '' : '（未填 Key）'}` })),
+          ]} />
+        </Form.Item>
+        {legacyCompatModel && <Alert type="info" message="此 bot 保留旧引擎配置。可先到「模型接入 → 旧配置兼容与复制」创建独立连接，再在这里选择；切换前原有 Key 和模型继续生效。" />}
         {switchingEngine && <Alert type="info" showIcon style={{ marginBottom: 16 }} message="切换引擎后将清除原模型与推理强度覆盖，跟随默认设置；已有会话的 /model 设置保留。" />}
-        {editing && engine === 'codex' && !switchingEngine && (
+        {engine === 'codex' && !switchingEngine && (
           <Collapse
             size="small"
             defaultActiveKey={['codex']}
@@ -318,67 +335,6 @@ export default function BotFormDrawer({
           />
         )}
 
-        {editing && engine === 'deepseek' && (
-          <Collapse
-            size="small"
-            defaultActiveKey={['deepseek']}
-            items={[
-              {
-                key: 'deepseek',
-                forceRender: true,
-                label: 'DeepSeek 引擎设置（无需装 CLI，只要 API key）',
-                children: (
-                  <>
-                    <Form.Item name={['deepseek', 'apiKey']} label="API Key（留空 = 不修改/用全局 DEEPSEEK_API_KEY）">
-                      <Input.Password placeholder="sk-..." />
-                    </Form.Item>
-                    <Form.Item name={['deepseek', 'model']} label="模型">
-                      <Select
-                        allowClear
-                        placeholder="默认 deepseek-v4-flash"
-                        options={[
-                          { value: 'deepseek-v4-flash', label: 'deepseek-v4-flash（快 · 便宜 · 默认）' },
-                          { value: 'deepseek-v4-pro', label: 'deepseek-v4-pro（更强推理）' },
-                              ]}
-                      />
-                    </Form.Item>
-                  </>
-                ),
-              },
-            ]}
-          />
-        )}
-
-        {editing && engine === 'minimax' && (
-          <Collapse
-            size="small"
-            defaultActiveKey={['minimax']}
-            items={[
-              {
-                key: 'minimax',
-                forceRender: true,
-                label: 'MiniMax 引擎设置（Anthropic 兼容端点，无需装 CLI）',
-                children: (
-                  <>
-                    <Form.Item name={['minimax', 'apiKey']} label="API Key（留空 = 不修改/用全局 MINIMAX_API_KEY）">
-                      <Input.Password placeholder="sk-cp-..." />
-                    </Form.Item>
-                    <Form.Item name={['minimax', 'model']} label="模型">
-                      <Select
-                        allowClear
-                        placeholder="默认 MiniMax-M3"
-                        options={[
-                          { value: 'MiniMax-M3', label: 'MiniMax-M3（旗舰 · 原生看图 · 默认）' },
-                          { value: 'MiniMax-M2.5', label: 'MiniMax-M2.5（上一代 · 更省）' },
-                        ]}
-                      />
-                    </Form.Item>
-                  </>
-                ),
-              },
-            ]}
-          />
-        )}
 
         <Collapse
           size="small"
@@ -391,8 +347,8 @@ export default function BotFormDrawer({
               label: '限制与预算（可选）',
               children: (
                 <>
-                  {engine === 'claude' && !switchingEngine && <Form.Item name="model" label="模型覆盖（Claude）">
-                    <Input placeholder="留空 = 用「系统配置 → 默认设置」里的 Claude 默认模型" />
+                  {engine !== 'codex' && !switchingEngine && <Form.Item name="model" label="模型覆盖（可选）">
+                    <Input disabled={legacyCompatModel} placeholder="留空 = 使用所选连接的默认模型" />
                   </Form.Item>}
                   <Form.Item name="maxTurns" label="单任务最大回合数">
                     <InputNumber min={1} style={{ width: '100%' }} />

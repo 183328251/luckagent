@@ -598,6 +598,19 @@ export class MessageBridge {
     return tasks;
   }
 
+  /** Read-only restart gate, including admission, continuations and queued media. */
+  getRestartActivity(): { active: number; queued: number } {
+    const active = new Set([...this.runningTasks.keys(), ...this.admitting.keys(), ...this.continuationTasks.keys()]);
+    for (const executor of this.persistentRegistry?.list() || []) if (executor.hasActiveTurn) active.add(executor.chatId);
+    let codexQueued = 0;
+    for (const entry of this.engineCache.values()) if (entry.executor instanceof PersistentCodexExecutor) {
+      const activity = entry.executor.restartActivity();
+      for (const chatId of activity.activeChats) active.add(chatId);
+      codexQueued += activity.queued;
+    }
+    return { active: active.size, queued: [...this.messageQueues.values()].reduce((n, q) => n + q.length, 0) + this.pendingBatches.size + codexQueued };
+  }
+
   /** Stop a running task for the given chatId. Returns true if a task was stopped. */
   stopChatTask(chatId: string): boolean {
     if (!this.runningTasks.has(chatId)) return false;

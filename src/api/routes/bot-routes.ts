@@ -1,7 +1,8 @@
+import { configuredConnectionEngine, botConnectionChoice, validateConnectionSelection } from '../../model-connections.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type * as http from 'node:http';
-import { addBot, removeBot, updateBot, getBotEntry, addPeer, removePeer, batchSetBotEngine, BatchEngineError } from '../bots-config-writer.js';
+import { readBotsConfig, addBot, removeBot, updateBot, getBotEntry, addPeer, removePeer, batchSetBotEngine, BatchEngineError } from '../bots-config-writer.js';
 import { configuredEngine } from '../bot-engine-settings.js';
 import { installSkillsToWorkDir } from '../skills-installer.js';
 import { resolveEngineName } from '../../engines/index.js';
@@ -150,6 +151,10 @@ export async function handleBotRoutes(
       return true;
     }
     const body = await parseJsonBody(req);
+    if ('modelConnection' in body) {
+      try { validateConnectionSelection(body.modelConnection, readBotsConfig(botsConfigPath)); }
+      catch { jsonResponse(res, 400, { error: '请选择有效的模型连接' }); return true; }
+    }
     const platform = (body.platform as string) || 'feishu';
     const name = body.name as string;
 
@@ -180,6 +185,7 @@ export async function handleBotRoutes(
       : path.join(workDirExpanded, 'inputs');
 
     const entry: Record<string, unknown> = {
+      ...(body.modelConnection ? { modelConnection: body.modelConnection } : {}),
       name, ...(body.description ? { description: body.description } : {}),
       ...(body.engine ? { engine: body.engine } : {}),
       ...(body.deepseek ? { deepseek: body.deepseek } : {}),
@@ -260,6 +266,10 @@ export async function handleBotRoutes(
       return true;
     }
     const body = await parseJsonBody(req);
+    if ('modelConnection' in body) {
+      try { validateConnectionSelection(body.modelConnection, readBotsConfig(botsConfigPath)); }
+      catch { jsonResponse(res, 400, { error: '请选择有效的模型连接' }); return true; }
+    }
     // Strip any masked secret values so an echoed-back mask can never be
     // written into bots.json (updateBot treats ''/null as "delete this key",
     // so an unchanged secret must simply be absent from the payload).
@@ -290,7 +300,7 @@ export async function handleBotRoutes(
     if (botsConfigPath) {
       const found = getBotEntry(botsConfigPath, name);
       if (found) {
-        jsonResponse(res, 200, { name, platform: found.platform, ...runningInfo, configuredEngine: configuredEngine(found.entry), defaultEngine: configuredEngine({}), config: redactBotEntry(found.entry as unknown as Record<string, unknown>) });
+        jsonResponse(res, 200, { name, platform: found.platform, ...runningInfo, configuredEngine: configuredConnectionEngine(found.entry, readBotsConfig(botsConfigPath)), defaultEngine: configuredEngine({}), connectionChoice: botConnectionChoice(found.entry), config: redactBotEntry(found.entry as unknown as Record<string, unknown>) });
         return true;
       }
     }
@@ -379,7 +389,7 @@ function defaultModelForConfig(config: import('../../config.js').BotConfigBase):
     case 'claude':
       return config.claude.model;
     case 'deepseek':
-      return config.deepseek?.model || 'deepseek-v4-flash';
+      return config.deepseek?.model || 'deepseek-flash';
     case 'minimax':
       return config.minimax?.model || 'MiniMax-M3';
   }

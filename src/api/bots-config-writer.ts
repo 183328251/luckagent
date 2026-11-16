@@ -1,3 +1,4 @@
+import { configuredConnectionEngine } from '../model-connections.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { BotsJsonNewFormat, FeishuBotJsonEntry, PeerJsonEntry } from '../config.js';
@@ -69,10 +70,13 @@ export function updateBot(configPath: string, name: string, updates: Record<stri
 
   // Merge updates into existing entry (name and platform credentials are immutable)
   const entry = bots[idx] as unknown as Record<string, unknown>;
-  const previousEngine = configuredEngine(entry);
+  const previousEngine = configuredConnectionEngine(bots[idx], config);
   mergeInto(entry, updates);
-  const nextEngine = configuredEngine(entry);
-  if ('engine' in updates && previousEngine !== nextEngine && (nextEngine === 'claude' || nextEngine === 'codex')) {
+  if ('engine' in updates && !('modelConnection' in updates) && previousEngine !== configuredEngine(entry)) {
+    if (entry.engine === 'codex' || entry.engine === 'claude') entry.modelConnection = entry.engine === 'codex' ? 'codex' : 'local';
+  }
+  const nextEngine = configuredConnectionEngine(bots[idx], config);
+  if (previousEngine !== nextEngine && (nextEngine === 'claude' || nextEngine === 'codex')) {
     // Clear AFTER merging so hidden/echoed fields from the old edit form
     // cannot restore stale model choices during an engine switch.
     clearSubscriptionModelOverrides(entry);
@@ -101,8 +105,9 @@ export function batchSetBotEngine(configPath: string, names: unknown, engine: un
   });
   const updated: string[] = [], unchanged: string[] = [];
   for (const entry of entries) {
-    if (configuredEngine(entry) === engine) { unchanged.push(entry.name); continue; }
+    if (configuredConnectionEngine(entry, config) === engine) { unchanged.push(entry.name); continue; }
     entry.engine = engine;
+    entry.modelConnection = engine === 'codex' ? 'codex' : 'local';
     clearSubscriptionModelOverrides(entry as unknown as Record<string, unknown>);
     updated.push(entry.name);
   }

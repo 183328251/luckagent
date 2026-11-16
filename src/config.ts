@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { applyModelConnection, type ModelConnection } from './model-connections.js';
 import type { AgentTeamConfig } from './agent-teams/team-store.js';
 
 /**
@@ -100,6 +101,7 @@ export interface BotConfigBase {
      *  key instead of ~/.claude/.credentials.json. Supports cc-switch compatibility:
      *  leave unset to let Claude Code resolve auth dynamically. */
     apiKey: string | undefined;
+    connection?: ModelConnection | 'local';
     outputsBaseDir: string;
     downloadsDir: string;
     /**
@@ -124,7 +126,7 @@ export interface BotConfigBase {
   deepseek?: {
     /** DeepSeek API key (falls back to env DEEPSEEK_API_KEY). */
     apiKey?: string;
-    /** Model id (default deepseek-v4-flash; vision: deepseek-v4-flash-vision-exp). */
+    /** Model id (default deepseek-flash = V4.1 Flash 1017, native vision; or deepseek-v4-pro). */
     model?: string;
     /** Anthropic-compatible endpoint (default https://api.deepseek.com/anthropic). */
     baseUrl?: string;
@@ -276,6 +278,7 @@ interface EngineJsonFields {
 }
 
 export interface FeishuBotJsonEntry extends EngineJsonFields {
+  modelConnection?: string;
   name: string;
   reimbursementPrint?: import('./modules/reimbursement-print/types.js').ReimbursementPrintConfig;
   description?: string;
@@ -424,6 +427,8 @@ export interface PeerJsonEntry {
 }
 
 export interface BotsJsonNewFormat {
+  modelConnections?: ModelConnection[];
+  defaultModelConnection?: string;
   feishuBots?: FeishuBotJsonEntry[];
   peers?: PeerJsonEntry[];
   agentTeams?: AgentTeamConfig[];
@@ -449,7 +454,7 @@ export function loadAppConfig(): AppConfig {
       // New format: { feishuBots: [...] }
       const cfg = parsed as BotsJsonNewFormat;
       if (cfg.feishuBots) {
-        feishuBots = cfg.feishuBots.map(feishuBotFromJson);
+        feishuBots = cfg.feishuBots.map(entry => applyModelConnection(feishuBotFromJson(entry), entry, cfg));
       }
       if (cfg.agentTeams) {
         agentTeams = cfg.agentTeams.map(normalizeAgentTeamConfig);

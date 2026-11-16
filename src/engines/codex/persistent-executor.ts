@@ -524,6 +524,14 @@ export class PersistentCodexExecutor extends EventEmitter {
       .filter((s) => s.turnId && s.options.apiContext?.chatId)
       .map((s) => ({ chatId: s.options.apiContext!.chatId, startTime: s.startedAt }));
   }
+  /** Include durable jobs, active goals and thread preparation between native turns. */
+  restartActivity(): { activeChats: string[]; queued: number } {
+    const chats = new Set(this.activeWork().map(t => t.chatId));
+    for (const job of this.jobs.values()) if (job.status === 'running') chats.add(job.chatId);
+    for (const goal of this.goals.values()) if (goal.goal.status === 'active') chats.add(goal.chatId);
+    return { activeChats: [...chats], queued: this.loading.size + [...this.jobs.values()].filter(j => j.status === 'queued').length };
+  }
+
   hasActiveMainTurn(chatId: string): boolean {
     return [...this.scopes.values()].some(
       (s) =>
