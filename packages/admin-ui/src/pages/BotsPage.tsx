@@ -72,13 +72,14 @@ export default function BotsPage({ onChanged }: { onChanged: () => void }) {
 
   const engineOf = (bot: BotOverview) => (bot.running ? bot.engine : bot.configuredEngine || bot.engine);
   const categoryOf = (bot: BotOverview) =>
-    bot.modelDisabled ? 'none' : ['claude', 'codex'].includes(engineOf(bot)) ? engineOf(bot) : 'other';
+    bot.modelDisabled ? 'none' : ['claude', 'codex', 'antigravity'].includes(engineOf(bot)) ? engineOf(bot) : 'other';
   const searched = bots.filter((b) => `${b.name} ${b.description || ''}`.toLowerCase().includes(search.toLowerCase()));
   const visible = searched.filter((b) => engineFilter === 'all' || categoryOf(b) === engineFilter);
   const engineOptions = [
     { value: 'all', label: '全部' },
     { value: 'claude', label: 'Claude' },
     { value: 'codex', label: 'Codex' },
+    { value: 'antigravity', label: 'Antigravity' },
     { value: 'other', label: '其他' },
     { value: 'none', label: '无模型' },
   ].map((option) => ({
@@ -228,7 +229,7 @@ export default function BotsPage({ onChanged }: { onChanged: () => void }) {
                         : undefined
                     }
                   >
-                    {b.running ? { claude: 'Claude', codex: 'Codex' }[b.engine] || b.engine : '未运行'}
+                    {b.running ? { claude: 'Claude', codex: 'Codex', antigravity: 'Antigravity' }[b.engine] || b.engine : '未运行'}
                   </Tag>
                   <Typography.Text type="secondary">{b.connectionName}</Typography.Text>
                   {b.engineSettingsPending && <Tag color="orange">待重启</Tag>}
@@ -311,6 +312,7 @@ export default function BotsPage({ onChanged }: { onChanged: () => void }) {
           options={[
             { label: 'Claude', value: 'claude' },
             { label: 'Codex', value: 'codex' },
+            { label: 'Antigravity', value: 'antigravity' },
           ]}
         />
         <Alert

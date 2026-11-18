@@ -55,6 +55,13 @@ export class StreamProcessor {
   constructor(private userPrompt: string) {}
 
   processMessage(message: SDKMessage): CardState {
+    const stats = message.engineStats;
+    if (stats?.model) this._model = stats.model;
+    if (Number.isSafeInteger(stats?.contextTokens) && stats!.contextTokens! >= 0 &&
+        Number.isSafeInteger(stats?.contextWindow) && stats!.contextWindow! > 0) {
+      this._totalTokens = stats!.contextTokens;
+      this._contextWindow = stats!.contextWindow;
+    }
     // Capture session_id from any message
     if (message.session_id) {
       this.sessionId = message.session_id;

@@ -100,6 +100,8 @@ export class BotRegistry {
 
 function defaultModelForEngine(config: BotConfigBase): string | undefined {
   switch (resolveEngineName(config)) {
+    case 'antigravity':
+      return config.antigravity?.model;
     case 'codex':
       return config.codex?.model;
     case 'claude':

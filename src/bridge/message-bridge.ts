@@ -1,3 +1,5 @@
+import { handleAntigravityCommand } from '../engines/antigravity/commands.js';
+import { PersistentAntigravityExecutor } from '../engines/antigravity/persistent-executor.js';
 import { PersistentCodexExecutor, type CodexBackgroundJob } from '../engines/codex/persistent-executor.js';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -336,6 +338,7 @@ export class MessageBridge {
 
     this.outputHandler = new OutputHandler(logger, sender, this.outputsManager);
     if (this.executor instanceof PersistentCodexExecutor) this.wireCodexExecutor(this.executor);
+    if (this.executor instanceof PersistentAntigravityExecutor) this.wireAntigravityExecutor(this.executor);
     // [design-note Q] 延迟清理 rm 前先补扫发送(目录名即 chatId)——
     // 后台任务晚落盘的产物不再被 5 分钟定时 rmSync 静默销毁(2026-07-30 事故)。
     this.outputsManager.setSweeper((dir) => this.outputHandler.sweepDir(path.basename(dir), dir));
@@ -403,6 +406,7 @@ export class MessageBridge {
       entry = { engine, executor };
       this.engineCache.set(name, entry);
       if (executor instanceof PersistentCodexExecutor) this.wireCodexExecutor(executor);
+      if (executor instanceof PersistentAntigravityExecutor) this.wireAntigravityExecutor(executor);
       this.logger.info({ engine: name, chatId }, 'Instantiated engine on demand for session override');
     }
     return entry.executor;
@@ -417,7 +421,7 @@ export class MessageBridge {
     const session = this.sessionManager.getSession(chatId);
     const engineName: EngineName = session.engine ?? resolveEngineName(this.config);
 
-    if (session.sessionId && ((session.sessionIdEngine && session.sessionIdEngine !== engineName) || (engineName === 'codex' && !session.sessionIdEngine))) {
+    if (session.sessionId && ((session.sessionIdEngine && session.sessionIdEngine !== engineName) || ((engineName === 'codex' || engineName === 'antigravity') && !session.sessionIdEngine))) {
       this.logger.info(
         { chatId, sessionIdEngine: session.sessionIdEngine, engine: engineName },
         'Clearing session id from a different engine',
@@ -425,7 +429,7 @@ export class MessageBridge {
       this.sessionManager.resetSession(chatId);
     }
 
-    if (session.model && ((session.modelEngine && session.modelEngine !== engineName) || (engineName === 'codex' && !session.modelEngine))) {
+    if (session.model && ((session.modelEngine && session.modelEngine !== engineName) || ((engineName === 'codex' || engineName === 'antigravity') && !session.modelEngine))) {
       this.logger.info(
         { chatId, modelEngine: session.modelEngine, engine: engineName },
         'Clearing model override from a different engine',
@@ -444,7 +448,7 @@ export class MessageBridge {
     const session = this.sessionManager.getSession(chatId);
     const engineName = overrideEngine;
 
-    if (session.sessionId && ((session.sessionIdEngine && session.sessionIdEngine !== engineName) || (engineName === 'codex' && !session.sessionIdEngine))) {
+    if (session.sessionId && ((session.sessionIdEngine && session.sessionIdEngine !== engineName) || ((engineName === 'codex' || engineName === 'antigravity') && !session.sessionIdEngine))) {
       this.logger.info(
         { chatId, sessionIdEngine: session.sessionIdEngine, engine: engineName },
         'Clearing API session id from a different engine',
@@ -452,7 +456,7 @@ export class MessageBridge {
       this.sessionManager.resetSession(chatId);
     }
 
-    if (session.model && ((session.modelEngine && session.modelEngine !== engineName) || (engineName === 'codex' && !session.modelEngine))) {
+    if (session.model && ((session.modelEngine && session.modelEngine !== engineName) || ((engineName === 'codex' || engineName === 'antigravity') && !session.modelEngine))) {
       this.logger.info(
         { chatId, modelEngine: session.modelEngine, engine: engineName },
         'Clearing API model override from a different engine',
@@ -464,6 +468,20 @@ export class MessageBridge {
       session: this.sessionManager.getSession(chatId),
       engineName,
     };
+  }
+
+  private wireAntigravityExecutor(executor: PersistentAntigravityExecutor): void {
+    executor.work.on('result', ({ job, result }) => {
+      if (job.kind === 'goal' && ['completed', 'failed'].includes(job.status)) this.sessionManager.setGoal(job.chatId, undefined);
+      void this.deliverCodexResult(job.chatId, `${job.kind === 'goal' ? '🎯 目标' : '后台任务'} ${job.id}：${job.prompt}`, result, job.outputsDir)
+        .then(() => executor.work.markDelivered(job.id)).catch(err => this.logger.error({ err }, 'Antigravity result delivery failed'));
+    });
+    executor.work.on('question', ({ chatId, questions }) => {
+      void this.sender.sendTextNotice(chatId, 'Antigravity 任务需要回答',
+        questions.map((q: any) => [q.question, ...(q.options ?? []).map((o: any, i: number) => `${i + 1}. ${o.label}`)].join('\n')).join('\n\n') + '\n\n直接回复答案即可。')
+        .catch(err => this.logger.error({ err }, 'Antigravity question delivery failed'));
+    });
+    executor.work.restore();
   }
 
   private wireCodexExecutor(executor: PersistentCodexExecutor): void {
@@ -500,6 +518,18 @@ export class MessageBridge {
 
   private async handleCodexCommand(msg: IncomingMessage): Promise<boolean> {
     const { chatId, text } = msg;
+    if ((this.sessionManager.getSession(chatId).engine ?? resolveEngineName(this.config)) === 'antigravity') {
+      const executor = this.executorForEngine(chatId, 'antigravity');
+      if (!(executor instanceof PersistentAntigravityExecutor)) return false;
+      const session = this.prepareSessionForExecution(chatId).session;
+      return handleAntigravityCommand(msg, { executor,
+        options: { cwd: session.workingDirectory, prompt: '', model: session.model, abortController: new AbortController(), apiContext: { botName: this.config.name, chatId } },
+        notice: (title, content, color) => this.sender.sendTextNotice(chatId, title, content, color),
+        outputs: key => this.outputsManager.prepareDir(key),
+        stop: () => { this.clearChatQueue(chatId); this.stopTask(chatId); },
+        setGoal: objective => this.sessionManager.setGoal(chatId, objective),
+      });
+    }
     if ((this.sessionManager.getSession(chatId).engine ?? resolveEngineName(this.config)) !== 'codex') return false;
     const command = text.split(/\s+/)[0].toLowerCase();
     if (!['/goal','/background','/stop','/team','/teams','/agent','/agents'].includes(command)) return false;
@@ -602,13 +632,20 @@ export class MessageBridge {
   getRestartActivity(): { active: number; queued: number } {
     const active = new Set([...this.runningTasks.keys(), ...this.admitting.keys(), ...this.continuationTasks.keys()]);
     for (const executor of this.persistentRegistry?.list() || []) if (executor.hasActiveTurn) active.add(executor.chatId);
+    let antigravityQueued = 0;
+    for (const entry of this.engineCache.values()) if (entry.executor instanceof PersistentAntigravityExecutor) {
+      const activity = entry.executor.work.activity();
+      for (const chatId of activity.activeChats) active.add(chatId);
+      for (const task of entry.executor.activeWork()) active.add(task.chatId);
+      antigravityQueued += activity.queued;
+    }
     let codexQueued = 0;
     for (const entry of this.engineCache.values()) if (entry.executor instanceof PersistentCodexExecutor) {
       const activity = entry.executor.restartActivity();
       for (const chatId of activity.activeChats) active.add(chatId);
       codexQueued += activity.queued;
     }
-    return { active: active.size, queued: [...this.messageQueues.values()].reduce((n, q) => n + q.length, 0) + this.pendingBatches.size + codexQueued };
+    return { active: active.size, queued: [...this.messageQueues.values()].reduce((n, q) => n + q.length, 0) + this.pendingBatches.size + codexQueued + antigravityQueued };
   }
 
   /** Stop a running task for the given chatId. Returns true if a task was stopped. */
@@ -697,7 +734,7 @@ export class MessageBridge {
    * reason to keep new users in the worse default any longer.
    */
   private isPersistentExecutorEnabled(): boolean {
-    if (resolveEngineName(this.config) === 'codex') return false;
+    if (['codex', 'antigravity'].includes(resolveEngineName(this.config))) return false;
     const cfg = this.config.persistentExecutor;
     if (cfg?.enabled === true) return true;
     if (cfg?.enabled === false) return false;
@@ -1433,7 +1470,7 @@ export class MessageBridge {
    * underlying Claude processes (and any teammates) terminate cleanly.
    */
   async shutdownPersistentExecutors(reason: string = 'bot-shutdown'): Promise<void> {
-    for (const entry of this.engineCache.values()) if (entry.executor instanceof PersistentCodexExecutor) await entry.executor.shutdown();
+    for (const entry of this.engineCache.values()) if (entry.executor instanceof PersistentCodexExecutor || entry.executor instanceof PersistentAntigravityExecutor) await entry.executor.shutdown();
     if (this.persistentRegistry) {
       await this.persistentRegistry.shutdownAll(reason);
     }
@@ -1446,7 +1483,7 @@ export class MessageBridge {
    * No-op if persistent mode is off or chat has no executor.
    */
   async releaseChatExecutor(chatId: string, reason: string = 'reset'): Promise<void> {
-    for (const entry of this.engineCache.values()) if (entry.executor instanceof PersistentCodexExecutor) await entry.executor.resetChat(chatId);
+    for (const entry of this.engineCache.values()) if (entry.executor instanceof PersistentCodexExecutor || entry.executor instanceof PersistentAntigravityExecutor) await entry.executor.resetChat(chatId);
     if (!this.persistentRegistry) return;
     await this.persistentRegistry.release(chatId, reason);
   }
@@ -1794,6 +1831,11 @@ export class MessageBridge {
       return;
     }
 
+    if (!text.startsWith('/') && !this.runningTasks.get(chatId)?.pendingQuestion && (this.sessionManager.getSession(chatId).engine ?? resolveEngineName(this.config)) === 'antigravity') {
+      const executor = this.executorForEngine(chatId, 'antigravity');
+      if (executor instanceof PersistentAntigravityExecutor && executor.work.answerPending(chatId, text)) return;
+    }
+
     if (!text.startsWith('/') && (this.sessionManager.getSession(chatId).engine ?? resolveEngineName(this.config)) === 'codex') {
       const executor = this.executorForEngine(chatId, 'codex');
       if (executor instanceof PersistentCodexExecutor && executor.answerPending(chatId, text)) return;
@@ -1804,7 +1846,7 @@ export class MessageBridge {
       // Bare client-side slash commands (no argument) that we surface as a
       // selectable Feishu picker card instead of passing the argless command
       // through to the TUI (which would just open an autocomplete menu).
-      const codexCommand = (this.sessionManager.getSession(chatId).engine ?? resolveEngineName(this.config)) === 'codex' &&
+      const codexCommand = ['codex', 'antigravity'].includes(this.sessionManager.getSession(chatId).engine ?? resolveEngineName(this.config)) &&
         /^\/(goal|background|agent|agents|team|teams)(\s|$)/i.test(text);
       if (!codexCommand && await this.slashPickers.tryOpen(msg)) return;
 
@@ -3526,8 +3568,8 @@ export class MessageBridge {
     // exits; the legacy sync destroy() fire-and-forgets it.
     return Promise.all([
       this.persistentRegistry?.shutdownAll('bridge-destroy'),
-      ...[...this.engineCache.values()].filter(e => e.executor instanceof PersistentCodexExecutor)
-        .map(e => (e.executor as PersistentCodexExecutor).shutdown()),
+      ...[...this.engineCache.values()].filter(e => e.executor instanceof PersistentCodexExecutor || e.executor instanceof PersistentAntigravityExecutor)
+        .map(e => (e.executor as PersistentCodexExecutor | PersistentAntigravityExecutor).shutdown()),
     ]).then(() => {});
   }
 

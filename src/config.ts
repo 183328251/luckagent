@@ -43,9 +43,20 @@ function loadEnvFiles(): void {
 loadEnvFiles();
 
 /** Agent engine backing a bot. */
-export type EngineName = 'claude' | 'deepseek' | 'minimax' | 'codex';
+export type EngineName = 'claude' | 'deepseek' | 'minimax' | 'codex' | 'antigravity';
 
 export type CodexReasoningEffort = 'low' | 'medium' | 'high' | 'xhigh' | 'max' | 'ultra';
+
+/** Local Antigravity CLI, using the host's existing authentication. */
+export interface AntigravityBotConfig {
+  executable?: string;
+  model?: string;
+  reasoningEffort?: 'low' | 'medium' | 'high' | 'xhigh' | 'max';
+  mode?: 'default' | 'accept-edits' | 'auto' | 'plan';
+  /** Explicit opt-in; the CLI sandbox remains enabled. */
+  skipPermissions?: boolean;
+  writableRoots?: string[];
+}
 
 /** Local Codex CLI, authenticated with the host's ChatGPT subscription. */
 export interface CodexBotConfig {
@@ -94,6 +105,7 @@ export interface BotConfigBase {
   /** Agent engine. Defaults to 'claude' unless LUCKAGENT_ENGINE or bots.json overrides it. */
   engine?: EngineName;
   codex?: CodexBotConfig;
+  antigravity?: AntigravityBotConfig;
   claude: {
     defaultWorkingDirectory: string;
     maxTurns: number | undefined;
@@ -272,6 +284,7 @@ export interface DeepseekJsonConfig {
 interface EngineJsonFields {
   engine?: EngineName;
   codex?: CodexBotConfig;
+  antigravity?: AntigravityBotConfig;
   deepseek?: DeepseekJsonConfig;
   /** MiniMax（Anthropic 兼容端点）overrides in bots.json. Same shape as deepseek. */
   minimax?: DeepseekJsonConfig;
@@ -336,6 +349,7 @@ function feishuBotFromJson(entry: FeishuBotJsonEntry): BotConfig {
     ...(entry.groupOnlyAllowUsers?.length ? { groupOnlyAllowUsers: entry.groupOnlyAllowUsers } : {}),
     ...(entry.engine ? { engine: entry.engine } : {}),
     ...(entry.codex ? { codex: entry.codex } : {}),
+    ...(entry.antigravity ? { antigravity: entry.antigravity } : {}),
     ...(buildDeepseekConfig(entry.deepseek) ? { deepseek: buildDeepseekConfig(entry.deepseek) } : {}),
     ...(buildMinimaxConfig(entry.minimax) ? { minimax: buildMinimaxConfig(entry.minimax) } : {}),
     feishu: {
@@ -551,7 +565,7 @@ function normalizeAgentTeamConfig(team: AgentTeamConfig): AgentTeamConfig {
         .map((agent) => ({
           name: agent.name.trim(),
           ...(agent.role ? { role: agent.role } : {}),
-          ...(['claude', 'deepseek', 'minimax', 'codex'].includes(agent.engine ?? '') ? { engine: agent.engine } : {}),
+          ...(['claude', 'deepseek', 'minimax', 'codex', 'antigravity'].includes(agent.engine ?? '') ? { engine: agent.engine } : {}),
           ...(agent.prompt ? { prompt: agent.prompt } : {}),
           ...(agent.sessionId ? { sessionId: agent.sessionId } : {}),
           ...(agent.status === 'idle' || agent.status === 'working' || agent.status === 'stopped' ? { status: agent.status } : {}),

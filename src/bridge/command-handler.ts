@@ -74,7 +74,7 @@ export class CommandHandler {
           '`/stop` - Abort current running task',
           '`/status` - Show current session info',
           '`/model` - Show current engine/model; `/model list` - Available options',
-          '`/model claude`, `/model deepseek`, `/model minimax`, or `/model codex` - Switch engine (resets session)',
+          '`/model claude`, `/model deepseek`, `/model minimax`, `/model codex`, or `/model antigravity` - Switch engine (resets session)',
           '`/model <name>` - Set model for current engine',
           '`/resume` - List & switch to a previous Claude session (Claude only)',
           '`/resume <id>` - Resume a session directly by id prefix',
@@ -342,7 +342,7 @@ export class CommandHandler {
         '',
         'Usage:',
         '- `/model list` — Show available engines + models',
-        '- `/model claude`, `/model deepseek`, `/model minimax`, or `/model codex` — Switch engine (resets session)',
+        '- `/model claude`, `/model deepseek`, `/model minimax`, `/model codex`, or `/model antigravity` — Switch engine (resets session)',
         `- \`/model <name>\` — Set session model (e.g. ${exampleModels})`,
         '- `/model reset` — Clear overrides, use bot defaults',
       ];
@@ -375,6 +375,11 @@ export class CommandHandler {
         ].join('\n'),
         'green',
       );
+      return;
+    }
+
+    if ((normalized === 'list' || normalized === 'ls') && activeEngine === 'antigravity') {
+      await this.sender.sendTextNotice(chatId, 'Antigravity', `当前模型：${session.model || botDefault || '跟随本机默认'}。使用 /model <模型 ID> 设置；在本机运行 agy models 查看可用模型。`);
       return;
     }
 
@@ -417,7 +422,7 @@ export class CommandHandler {
       const lines = [
         `**Current engine:** \`${activeEngine}\`${session.engine ? ' (session override)' : ''}`,
         '',
-        '**Engines:** `/model claude`, `/model deepseek`, `/model minimax`, or `/model codex` to switch.',
+        '**Engines:** `/model claude`, `/model deepseek`, `/model minimax`, `/model codex`, or `/model antigravity` to switch.',
         '',
         header,
         '',
@@ -549,6 +554,8 @@ export class CommandHandler {
 
   private defaultModelForEngine(engine: EngineName): string | undefined {
     switch (engine) {
+      case 'antigravity':
+        return this.config.antigravity?.model;
       case 'codex':
         return this.config.codex?.model;
       case 'claude':
@@ -562,6 +569,8 @@ export class CommandHandler {
 
   private exampleModelsForEngine(engine: EngineName): string {
     switch (engine) {
+      case 'antigravity':
+        return '使用 agy models 查看本机可用模型，留空跟随默认';
       case 'codex':
         return '使用本机 Codex 可用模型，留空跟随 Codex 默认';
       case 'claude':
@@ -575,6 +584,8 @@ export class CommandHandler {
 
   private authTipForEngine(engine: EngineName): string {
     switch (engine) {
+      case 'antigravity':
+        return '_使用本机 Antigravity 登录；首次在终端运行 agy 完成认证。_';
       case 'codex':
         return '_使用本机 Codex 的 ChatGPT 登录（`codex login`）。支持 /goal、后台任务、子 agent 与执行中问答。_';
       case 'claude':
@@ -588,5 +599,5 @@ export class CommandHandler {
 }
 
 function isEngineName(value: string): value is EngineName {
-  return value === 'claude' || value === 'deepseek' || value === 'minimax' || value === 'codex';
+  return value === 'claude' || value === 'deepseek' || value === 'minimax' || value === 'codex' || value === 'antigravity';
 }

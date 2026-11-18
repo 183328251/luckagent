@@ -2,7 +2,7 @@ import { configuredConnectionEngine, selectedModelConnection } from '../model-co
 import type { BotConfigBase, FeishuBotJsonEntry, BotsJsonNewFormat } from '../config.js';
 import type { EngineName } from '../engines/types.js';
 
-const ENGINES: EngineName[] = ['claude', 'codex', 'deepseek', 'minimax'];
+const ENGINES: EngineName[] = ['claude', 'codex', 'antigravity', 'deepseek', 'minimax'];
 export function configuredEngine(entry: { engine?: unknown }, fallback = process.env.LUCKAGENT_ENGINE): EngineName {
   if (ENGINES.includes(entry.engine as EngineName)) return entry.engine as EngineName;
   return ENGINES.includes(fallback as EngineName) ? (fallback as EngineName) : 'claude';
@@ -11,11 +11,13 @@ export function configuredEngine(entry: { engine?: unknown }, fallback = process
 /** Only model/effort overrides are removed; executable, credentials and other settings survive. */
 export function clearSubscriptionModelOverrides(entry: Record<string, unknown>): void {
   delete entry.model;
-  const codex = entry.codex;
-  if (codex && typeof codex === 'object' && !Array.isArray(codex)) {
-    delete (codex as Record<string, unknown>).model;
-    delete (codex as Record<string, unknown>).reasoningEffort;
-    if (!Object.keys(codex).length) delete entry.codex;
+  for (const key of ['codex', 'antigravity']) {
+    const settings = entry[key];
+    if (settings && typeof settings === 'object' && !Array.isArray(settings)) {
+      delete (settings as Record<string, unknown>).model;
+      delete (settings as Record<string, unknown>).reasoningEffort;
+      if (!Object.keys(settings).length) delete entry[key];
+    }
   }
 }
 
@@ -24,7 +26,7 @@ export function engineSettingsOverview(entry: FeishuBotJsonEntry, live?: BotConf
   const selected = selectedModelConnection(entry, cfg);
   const connection = cfg.modelConnections?.find(c => c.id === selected);
   const model = connection ? entry.model || connection.model : engine === 'codex' ? entry.codex?.model : engine === 'claude' ? entry.model : entry[engine]?.model;
-  const effort = engine === 'codex' ? entry.codex?.reasoningEffort || null : null;
+  const effort = engine === 'codex' || engine === 'antigravity' ? entry[engine]?.reasoningEffort || null : null;
   const expectedModel =
     engine === 'claude'
       ? model || (selected === 'local' ? null : process.env.CLAUDE_MODEL || process.env.ANTHROPIC_MODEL || null)
@@ -35,7 +37,7 @@ export function engineSettingsOverview(entry: FeishuBotJsonEntry, live?: BotConf
           : model || null;
   const liveEngine = live ? configuredEngine(live) : null;
   const liveModel = live
-    ? (liveEngine === 'codex'
+    ? (liveEngine === 'antigravity' ? live.antigravity?.model : liveEngine === 'codex'
         ? live.codex?.model
         : liveEngine === 'claude'
           ? live.claude.model
@@ -51,7 +53,7 @@ export function engineSettingsOverview(entry: FeishuBotJsonEntry, live?: BotConf
       !!live &&
       (engine !== liveEngine ||
         expectedModel !== liveModel ||
-        (engine === 'codex' && effort !== (live.codex?.reasoningEffort || null))),
+        ((engine === 'codex' || engine === 'antigravity') && effort !== (live[engine]?.reasoningEffort || null))),
     modelDisabled: entry.reimbursementPrint?.enabled === true,
   };
 }

@@ -73,10 +73,10 @@ export function updateBot(configPath: string, name: string, updates: Record<stri
   const previousEngine = configuredConnectionEngine(bots[idx], config);
   mergeInto(entry, updates);
   if ('engine' in updates && !('modelConnection' in updates) && previousEngine !== configuredEngine(entry)) {
-    if (entry.engine === 'codex' || entry.engine === 'claude') entry.modelConnection = entry.engine === 'codex' ? 'codex' : 'local';
+    if (entry.engine === 'antigravity' || entry.engine === 'codex' || entry.engine === 'claude') entry.modelConnection = entry.engine === 'claude' ? 'local' : entry.engine;
   }
   const nextEngine = configuredConnectionEngine(bots[idx], config);
-  if (previousEngine !== nextEngine && (nextEngine === 'claude' || nextEngine === 'codex')) {
+  if (previousEngine !== nextEngine && (nextEngine === 'claude' || nextEngine === 'codex' || nextEngine === 'antigravity')) {
     // Clear AFTER merging so hidden/echoed fields from the old edit form
     // cannot restore stale model choices during an engine switch.
     clearSubscriptionModelOverrides(entry);
@@ -91,7 +91,7 @@ export class BatchEngineError extends Error {
 
 /** Validate the whole selection first, then persist once. No runtime/session operations. */
 export function batchSetBotEngine(configPath: string, names: unknown, engine: unknown): { updated: string[]; unchanged: string[] } {
-  if (engine !== 'claude' && engine !== 'codex') throw new BatchEngineError('请选择 Claude 或 Codex。');
+  if (engine !== 'claude' && engine !== 'codex' && engine !== 'antigravity') throw new BatchEngineError('请选择 Claude、Codex 或 Antigravity。');
   if (!Array.isArray(names) || !names.length || names.length > 200 || !names.every(n => typeof n === 'string' && n.length > 0 && n.length <= 128)) {
     throw new BatchEngineError('请选择 1～200 个机器人。');
   }
@@ -107,7 +107,7 @@ export function batchSetBotEngine(configPath: string, names: unknown, engine: un
   for (const entry of entries) {
     if (configuredConnectionEngine(entry, config) === engine) { unchanged.push(entry.name); continue; }
     entry.engine = engine;
-    entry.modelConnection = engine === 'codex' ? 'codex' : 'local';
+    entry.modelConnection = engine === 'claude' ? 'local' : engine;
     clearSubscriptionModelOverrides(entry as unknown as Record<string, unknown>);
     updated.push(entry.name);
   }

@@ -56,7 +56,7 @@ function QuotaWindow({ value, fallback }: { value: Window | null; fallback: stri
     </div>
   );
 }
-export function SubscriptionUsageCard({ engine = 'codex' }: { engine?: 'codex' | 'claude' }) {
+export function SubscriptionUsageCard({ engine = 'codex' }: { engine?: 'codex' | 'claude' | 'antigravity' }) {
   const forceRefresh = useRef(false);
   const {
     data: usage,
@@ -76,7 +76,7 @@ export function SubscriptionUsageCard({ engine = 'codex' }: { engine?: 'codex' |
   };
   return (
     <Card
-      title={engine === 'claude' ? 'Claude 订阅额度' : 'GPT 订阅额度'}
+      title={engine === 'antigravity' ? 'Antigravity 订阅额度' : engine === 'claude' ? 'Claude 订阅额度' : 'GPT 订阅额度'}
       style={{ height: '100%' }}
       size="small"
       loading={!usage && !error}
@@ -89,9 +89,10 @@ export function SubscriptionUsageCard({ engine = 'codex' }: { engine?: 'codex' |
       <Space direction="vertical" style={{ width: '100%' }} size="middle">
         {(error || usage?.warning) && <Alert type="warning" showIcon message={error || usage?.warning} />}
         {usage?.buckets.length ? (
-          usage.buckets.map((bucket) => (
-            <div key={bucket.id}>
-              <Space style={{ marginBottom: 10 }}>
+          <Row gutter={[16, 16]}>
+          {usage.buckets.map((bucket) => (
+            <Col key={bucket.id} xs={24} sm={engine === 'antigravity' ? 8 : 24}>
+              <Space wrap style={{ marginBottom: 10 }}>
                 <Typography.Text strong>{bucket.name}</Typography.Text>
                 {bucket.plan && <Tag>{bucket.plan.toUpperCase()}</Tag>}
                 {usage.stale && <Tag color="orange">上次结果</Tag>}
@@ -104,8 +105,9 @@ export function SubscriptionUsageCard({ engine = 'codex' }: { engine?: 'codex' |
                   <QuotaWindow value={bucket.secondary} fallback="长期额度" />
                 </Col>
               </Row>
-            </div>
-          ))
+            </Col>
+          ))}
+          </Row>
         ) : (
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无订阅额度数据" />
         )}

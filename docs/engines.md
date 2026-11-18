@@ -142,3 +142,11 @@ Codex 自己的原生 skills 仍按其 CLI 配置加载。
 
 各接入共用工作目录、CLAUDE.md、技能、持久会话池与记忆体系。工作目录的 `AGENTS.md` 是指向 `CLAUDE.md` 的符号链接；
 共用规范 `~/projects/CLAUDE.md` 继续生效。已有普通 `AGENTS.md` 不会被覆盖。
+
+## Antigravity CLI
+
+后台模型连接可选择 **Antigravity（本机登录）**，也可使用 `/model antigravity` 在会话内切换。先在桥接所属用户下运行 `agy` 登录；机器人表单自动读取模型、登录状态和套餐，模型与推理强度可单独覆盖。概览页展示原生订阅额度。
+
+正式执行走独立常驻 ACP：支持多轮续聊、重启恢复、文本/工具过程卡片、图片输入、outputs 文件交付、执行中问答与权限选择。默认接受工作区文件修改，其他权限在聊天中询问；也可在表单中显式开启工具自动批准。
+
+支持 `/goal` 原生目标执行和状态/暂停/恢复/清除、`/background` 独立后台任务及状态持久化、`/team <任务>` 原生协作、`/stop` 停止。当前不支持 `/goal --budget` 或 allowedTools/maxTurns 限制。配置、恢复语义与验证范围见 [Antigravity 接入记录](local-changes/2026-11-17-antigravity-engine.md)。

@@ -16,7 +16,7 @@ export interface ModelConnection {
 }
 
 export function validateConnectionSelection(value: unknown, cfg: BotsJsonNewFormat, global = false): void {
-  if (value === undefined || value === null || value === '' || value === 'local' || value === 'legacy' || value === 'codex' || (!global && value === 'inherit')) return;
+  if (value === undefined || value === null || value === '' || value === 'local' || value === 'legacy' || value === 'codex' || value === 'antigravity' || (!global && value === 'inherit')) return;
   if (typeof value !== 'string' || !cfg.modelConnections?.some(c => c.id === value)) {
     throw new Error('请选择有效的模型连接');
   }
@@ -26,7 +26,7 @@ export function validateConnectionSelection(value: unknown, cfg: BotsJsonNewForm
 export function botConnectionChoice(entry: Pick<FeishuBotJsonEntry, 'engine' | 'modelConnection'>): string {
   if (entry.modelConnection) return entry.modelConnection;
   const engine = entry.engine || process.env.LUCKAGENT_ENGINE || 'claude';
-  if (entry.engine === 'codex') return 'codex';
+  if (entry.engine === 'codex' || entry.engine === 'antigravity') return entry.engine;
   if (entry.engine === 'claude') return 'legacy';
   return engine === 'deepseek' || engine === 'minimax' ? 'legacy' : 'inherit';
 }
@@ -36,9 +36,9 @@ export function selectedModelConnection(entry: Pick<FeishuBotJsonEntry, 'engine'
   return choice === 'inherit' ? cfg.defaultModelConnection || 'legacy' : choice;
 }
 
-export function configuredConnectionEngine(entry: Pick<FeishuBotJsonEntry, 'engine' | 'modelConnection'>, cfg: BotsJsonNewFormat): 'claude' | 'codex' | 'deepseek' | 'minimax' {
+export function configuredConnectionEngine(entry: Pick<FeishuBotJsonEntry, 'engine' | 'modelConnection'>, cfg: BotsJsonNewFormat): 'claude' | 'codex' | 'deepseek' | 'minimax' | 'antigravity' {
   const selected = selectedModelConnection(entry, cfg);
-  if (selected === 'codex') return 'codex';
+  if (selected === 'codex' || selected === 'antigravity') return selected;
   if (selected === 'local') return 'claude';
   if (selected !== 'legacy') {
     const connection = cfg.modelConnections?.find(c => c.id === selected);
@@ -46,7 +46,7 @@ export function configuredConnectionEngine(entry: Pick<FeishuBotJsonEntry, 'engi
     return modelConnectionEngine(connection);
   }
   const engine = entry.engine || process.env.LUCKAGENT_ENGINE;
-  return engine === 'codex' || engine === 'deepseek' || engine === 'minimax' ? engine : 'claude';
+  return engine === 'antigravity' || engine === 'codex' || engine === 'deepseek' || engine === 'minimax' ? engine : 'claude';
 }
 
 export function modelConnectionEngine(connection: ModelConnection | 'local'): 'claude' | 'deepseek' | 'minimax' {
@@ -56,8 +56,8 @@ export function modelConnectionEngine(connection: ModelConnection | 'local'): 'c
 export function applyModelConnection(bot: BotConfig, entry: FeishuBotJsonEntry, cfg: BotsJsonNewFormat): BotConfig {
   const selected = selectedModelConnection(entry, cfg);
   if (selected === 'legacy') return bot;
-  if (selected === 'codex') {
-    bot.engine = 'codex';
+  if (selected === 'codex' || selected === 'antigravity') {
+    bot.engine = selected;
     bot.claude.connection = undefined;
     return bot;
   }

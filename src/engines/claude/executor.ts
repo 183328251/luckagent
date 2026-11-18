@@ -278,6 +278,8 @@ export interface ExecutorOptions {
 
 export type SDKMessage = {
   type: string;
+  /** Native engine metadata; contextTokens is current occupancy, never cumulative usage. */
+  engineStats?: { model?: string; contextTokens?: number; contextWindow?: number };
   subtype?: string;
   uuid?: string;
   session_id?: string;

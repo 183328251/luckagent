@@ -1,3 +1,4 @@
+import AntigravitySettings from '../components/AntigravitySettings';
 import { useEffect, useState } from 'react';
 import {
   Alert,
@@ -119,12 +120,18 @@ export default function BotFormDrawer({
     const clearedCodex = editing && codexValues
       ? ['model', 'reasoningEffort'].filter(k => k in codexValues && isEmpty(codexValues[k]))
       : [];
+    const agyValues = values.antigravity as Record<string, unknown> | undefined;
+    const clearedAgy = editing && agyValues ? ['model', 'reasoningEffort', 'mode'].filter(k => k in agyValues && isEmpty(agyValues[k])) : [];
     const cleared = editing ? CLEARABLE.filter((k) => k in values && isEmpty(values[k])) : [];
     scrub(payload);
     for (const k of cleared) payload[k] = '';
     if (clearedCodex.length) {
       payload.codex = { ...(payload.codex as Record<string, unknown> ?? {}) };
       for (const k of clearedCodex) (payload.codex as Record<string, unknown>)[k] = '';
+    }
+    if (clearedAgy.length) {
+      payload.antigravity = { ...(payload.antigravity as Record<string, unknown> ?? {}) };
+      for (const k of clearedAgy) (payload.antigravity as Record<string, unknown>)[k] = '';
     }
     return payload;
   };
@@ -134,7 +141,7 @@ export default function BotFormDrawer({
     const payload = buildPayload(values);
     delete payload.engine;
     if (editing && payload.modelConnection === initialConnectionChoice) delete payload.modelConnection;
-    if (legacyCompatModel || engine === 'codex') delete payload.model;
+    if (legacyCompatModel || engine === 'codex' || engine === 'antigravity') delete payload.model;
     setLoading(true);
     try {
       if (editing) {
@@ -182,11 +189,11 @@ export default function BotFormDrawer({
   const resolvedChoice = connectionChoice === 'inherit' ? connections?.defaultConnection : connectionChoice;
   const selectedConnection = connections?.connections.find(c => c.id === resolvedChoice);
   const provider = selectedConnection?.provider;
-  const engine = resolvedChoice === 'codex' ? 'codex'
+  const engine = resolvedChoice === 'antigravity' ? 'antigravity' : resolvedChoice === 'codex' ? 'codex'
     : legacySelection ? legacyEngine || defaultEngine
       : provider === 'deepseek' || provider === 'minimax' ? provider : 'claude';
   const botName = Form.useWatch('name', form);
-  const switchingEngine = !!editing && !!initialEngine && engine !== initialEngine && ['claude', 'codex'].includes(engine);
+  const switchingEngine = !!editing && !!initialEngine && engine !== initialEngine && ['claude', 'codex', 'antigravity'].includes(engine);
   const codexModel = Form.useWatch(['codex', 'model'], form) as string | undefined;
 
   useEffect(() => {
@@ -277,6 +284,7 @@ export default function BotFormDrawer({
         <Form.Item name="modelConnection" label="模型连接" rules={[{ required: true }]} extra="在「系统配置 → 模型接入」统一管理服务商、Key 和默认模型。保存后重启桥接生效。">
           <Select disabled={!connections} options={[
             { value: 'codex', label: 'GPT（Codex 订阅）' },
+            { value: 'antigravity', label: 'Antigravity（本机登录）' },
             { value: 'inherit', label: '继承全局默认连接' },
             { value: 'legacy', label: `兼容旧配置（${legacyEngine || connections?.legacyDefaultEngine || 'claude'}）` },
             { value: 'local', label: '本机 Claude 登录（官方端点）' },
@@ -285,6 +293,18 @@ export default function BotFormDrawer({
         </Form.Item>
         {legacyCompatModel && <Alert type="info" message="此 bot 保留旧引擎配置。可先到「模型接入 → 旧配置兼容与复制」创建独立连接，再在这里选择；切换前原有 Key 和模型继续生效。" />}
         {switchingEngine && <Alert type="info" showIcon style={{ marginBottom: 16 }} message="切换引擎后将清除原模型与推理强度覆盖，跟随默认设置；已有会话的 /model 设置保留。" />}
+        {engine === 'antigravity' && !switchingEngine && (
+          <Collapse
+            size="small"
+            defaultActiveKey={['antigravity']}
+            items={[{
+              key: 'antigravity',
+              forceRender: true,
+              label: 'Antigravity 引擎设置（本机登录）',
+              children: <AntigravitySettings />,
+            }]}
+          />
+        )}
         {engine === 'codex' && !switchingEngine && (
           <Collapse
             size="small"
@@ -348,7 +368,7 @@ export default function BotFormDrawer({
               label: '限制与预算（可选）',
               children: (
                 <>
-                  {engine !== 'codex' && !switchingEngine && <Form.Item name="model" label="模型覆盖（可选）">
+                  {engine !== 'codex' && engine !== 'antigravity' && !switchingEngine && <Form.Item name="model" label="模型覆盖（可选）">
                     <Input disabled={legacyCompatModel} placeholder="留空 = 使用所选连接的默认模型" />
                   </Form.Item>}
                   <Form.Item name="maxTurns" label="单任务最大回合数">

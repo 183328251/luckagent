@@ -191,6 +191,7 @@ export async function handleBotRoutes(
       ...(body.deepseek ? { deepseek: body.deepseek } : {}),
       ...(body.minimax ? { minimax: body.minimax } : {}),
       ...(body.codex ? { codex: body.codex } : {}),
+      ...(body.antigravity ? { antigravity: body.antigravity } : {}),
       feishuAppId: appId, feishuAppSecret: appSecret, defaultWorkingDirectory: workDirInput,
       downloadsDir,
       ...(body.maxTurns ? { maxTurns: body.maxTurns } : {}),
@@ -384,6 +385,8 @@ export function stripMaskedSecrets(body: Record<string, unknown>): void {
 
 function defaultModelForConfig(config: import('../../config.js').BotConfigBase): string | undefined {
   switch (resolveEngineName(config)) {
+    case 'antigravity':
+      return config.antigravity?.model;
     case 'codex':
       return config.codex?.model;
     case 'claude':

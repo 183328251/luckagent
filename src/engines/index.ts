@@ -3,6 +3,7 @@ import type { BotConfigBase } from '../config.js';
 import type { Logger } from '../utils/logger.js';
 import type { Engine, EngineName } from './types.js';
 import { ClaudeEngine } from './claude/index.js';
+import { AntigravityEngine } from './antigravity/index.js';
 import { CodexEngine } from './codex/index.js';
 import { COMPAT_PROVIDERS } from './claude/auth-env.js';
 
@@ -21,6 +22,8 @@ export function createEngine(
 ): Engine {
   const name = override ?? resolveEngineName(config);
   switch (name) {
+    case 'antigravity':
+      return new AntigravityEngine({ ...config, engine: 'antigravity' }, logger);
     case 'codex':
       return new CodexEngine({ ...config, engine: 'codex' }, logger);
     case 'claude':
@@ -89,7 +92,7 @@ export function resolveEngineName(config: BotConfigBase): EngineName {
   const explicit = config.engine;
   if (explicit) return explicit;
   const envDefault = process.env.LUCKAGENT_ENGINE as EngineName | undefined;
-  if (envDefault === 'claude' || envDefault === 'deepseek' || envDefault === 'minimax' || envDefault === 'codex') return envDefault;
+  if (envDefault === 'claude' || envDefault === 'deepseek' || envDefault === 'minimax' || envDefault === 'codex' || envDefault === 'antigravity') return envDefault;
   return 'claude';
 }
 

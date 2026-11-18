@@ -51,7 +51,8 @@ export interface BotEntry {
   modelConnection?: string;
   name: string;
   description?: string;
-  engine?: 'claude' | 'deepseek' | 'minimax' | 'codex';
+  engine?: 'claude' | 'deepseek' | 'minimax' | 'codex' | 'antigravity';
+  antigravity?: { executable?: string; model?: string; reasoningEffort?: 'low' | 'medium' | 'high' | 'xhigh' | 'max'; mode?: 'default' | 'accept-edits' | 'auto' | 'plan'; skipPermissions?: boolean; writableRoots?: string[] };
   codex?: { executable?: string; model?: string; reasoningEffort?: CodexReasoningEffort };
   feishuAppId?: string;
   feishuAppSecret?: string;

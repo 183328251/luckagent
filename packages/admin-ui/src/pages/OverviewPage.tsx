@@ -534,10 +534,13 @@ export default function OverviewPage() {
       {statusBar}
       {tiles}
       <Row gutter={[16, 16]} align="stretch">
+        {/* Claude 额度查询暂时停用，恢复时与后端查询一起启用。
         <Col xs={24} lg={12}>
           <SubscriptionUsageCard engine="claude" />
         </Col>
+        */}
         <Col xs={24} lg={12}><SubscriptionUsageCard /></Col>
+        <Col xs={24} lg={12}><SubscriptionUsageCard engine="antigravity" /></Col>
       </Row>
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={10}>{attentionCard}</Col>

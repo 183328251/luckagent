@@ -31,7 +31,7 @@ export async function handleModelConnectionRoutes(ctx: RouteContext, req: http.I
       const summary = new Map<string, { name: string; count: number }>();
       for (const bot of running || []) {
         const connection = bot.config.claude.connection;
-        const name = bot.config.engine === 'codex' ? 'GPT（Codex 订阅）' : usage.runningBots?.includes(bot.name) ? '本机 Claude 登录'
+        const name = bot.config.engine === 'antigravity' ? 'Antigravity（本机登录）' : bot.config.engine === 'codex' ? 'GPT（Codex 订阅）' : usage.runningBots?.includes(bot.name) ? '本机 Claude 登录'
           : connection && connection !== 'local' ? connection.name
             : connection === 'local' ? '本机 Claude 登录'
               : bot.config.engine === 'deepseek' ? '旧 DeepSeek 配置'

@@ -58,7 +58,7 @@ export default function ModelConnectionsCard({ onChanged }: { onChanged: () => v
   };
   const applyDefault = () => {
     if (!data || !defaultDraft || defaultDraft === data.defaultConnection) return;
-    const name = defaultDraft === 'legacy' ? '兼容旧配置' : defaultDraft === 'local' ? '本机 Claude 登录' : defaultDraft === 'codex' ? 'GPT（Codex 订阅）' : data.connections.find(c => c.id === defaultDraft)?.name;
+    const name = defaultDraft === 'legacy' ? '兼容旧配置' : defaultDraft === 'local' ? '本机 Claude 登录' : defaultDraft === 'antigravity' ? 'Antigravity（本机登录）' : defaultDraft === 'codex' ? 'GPT（Codex 订阅）' : data.connections.find(c => c.id === defaultDraft)?.name;
     Modal.confirm({ title: `将默认连接设为「${name}」？`,
       content: <Space direction="vertical"><Typography.Text>重启后将影响 {data.inheritedBots.length} 个继承默认连接的 bot：</Typography.Text><Typography.Text>{data.inheritedBots.join('、') || '无'}</Typography.Text><Typography.Text type="secondary">固定绑定其他连接的 bot 不受影响。保存不会立即切换运行中的连接。</Typography.Text></Space>,
       okText: '保存默认连接', cancelText: '取消', onOk: async () => {
@@ -81,6 +81,7 @@ export default function ModelConnectionsCard({ onChanged }: { onChanged: () => v
             { value: 'legacy', label: '兼容旧配置（保留原引擎与认证）' },
             { value: 'local', label: '本机 Claude 登录（官方端点）' },
             { value: 'codex', label: 'GPT（Codex 订阅）' },
+            { value: 'antigravity', label: 'Antigravity（本机登录）' },
             ...(data?.connections || []).map(c => ({ value: c.id, label: `${c.name}${c.hasApiKey ? '' : '（未填 Key）'}` })),
           ]}
           onChange={setDefaultDraft} />

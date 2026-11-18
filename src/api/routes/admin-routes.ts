@@ -1,4 +1,7 @@
-import { getClaudeSubscriptionUsage } from '../../engines/claude/subscription-usage.js';
+import { getAntigravityUsage } from '../../engines/antigravity/subscription-usage.js';
+import { getAntigravityCatalog } from '../../engines/antigravity/model-catalog.js';
+// Claude 额度查询暂时停用，恢复时与前端卡片一起启用。
+// import { getClaudeSubscriptionUsage } from '../../engines/claude/subscription-usage.js';
 import { handleRestartRoutes } from './restart-routes.js';
 import { queryClaudeAuthStatus } from '../claude-auth-status.js';
 import { configuredConnectionEngine, selectedModelConnection } from '../../model-connections.js';
@@ -910,8 +913,9 @@ export async function handleAdminRoutes(
   }
 
   if (method === 'GET' && (url === '/admin/api/claude/usage' || url.startsWith('/admin/api/claude/usage?'))) {
-    const parsed = new URL(url, 'http://localhost');
-    jsonResponse(res, 200, await getClaudeSubscriptionUsage(parsed.searchParams.get('refresh') === '1'));
+    // const parsed = new URL(url, 'http://localhost');
+    // jsonResponse(res, 200, await getClaudeSubscriptionUsage(parsed.searchParams.get('refresh') === '1'));
+    jsonResponse(res, 200, { checkedAt: null, stale: true, buckets: [], resetCredits: null, warning: 'Claude 额度查询已暂时停用。' });
     return true;
   }
 
@@ -919,6 +923,18 @@ export async function handleAdminRoutes(
   if (method === 'GET' && (url === '/admin/api/codex/usage' || url.startsWith('/admin/api/codex/usage?'))) {
     const parsed = new URL(url, 'http://localhost');
     jsonResponse(res, 200, await getSubscriptionUsage(logger, parsed.searchParams.get('refresh') === '1'));
+    return true;
+  }
+
+  if (method === 'GET' && (url === '/admin/api/antigravity/usage' || url.startsWith('/admin/api/antigravity/usage?'))) {
+    const parsed = new URL(url, 'http://localhost');
+    jsonResponse(res, 200, await getAntigravityUsage(parsed.searchParams.get('refresh') === '1'));
+    return true;
+  }
+
+  if (method === 'GET' && (url === '/admin/api/antigravity/models' || url.startsWith('/admin/api/antigravity/models?'))) {
+    const parsed = new URL(url, 'http://localhost');
+    jsonResponse(res, 200, await getAntigravityCatalog(logger, parsed.searchParams.get('refresh') === '1'));
     return true;
   }
 
