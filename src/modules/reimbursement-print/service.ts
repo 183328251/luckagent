@@ -6,6 +6,7 @@ import type { ApprovalReader } from './approval-client.js';
 import type { PdfRenderer } from './renderer.js';
 import type { Logger } from '../../utils/logger.js';
 import { assertOwner, extractPrintData, printable } from './data.js';
+import { extractApprovalFlow } from './approval-flow.js';
 import { PrintError, type BusinessHandler, type ReimbursementPrintConfig } from './types.js';
 
 export interface PrintSender {
@@ -207,7 +208,9 @@ export class ReimbursementPrintService implements BusinessHandler {
       const financeReady = detail.status === 'PENDING' && s.financeReady && (await this.approvals.financeReady());
       if (!printable(detail, financeReady ? this.config.financeNodeIds || [] : []))
         throw new PrintError('这张报销单当前状态不符合打印条件，请重新获取报销单。', 'status_changed');
-      const data = extractPrintData(detail, await this.approvals.name(s.user));
+      const applicantName = await this.approvals.name(s.user);
+      const data = extractPrintData(detail, applicantName);
+      data.approval_rows = await extractApprovalFlow(detail, applicantName, (id) => this.approvals.name(id));
       file = await this.render(data);
       const fileKey = await this.sender.uploadFile(file.filePath, '报销单.pdf', 'pdf');
       if (!fileKey) throw new PrintError('报销单 PDF 上传失败，请重新获取报销单后重试。', 'upload');

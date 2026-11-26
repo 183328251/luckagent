@@ -12,4 +12,5 @@ lxml
 matplotlib
 xlsxwriter
 PyMuPDF
+fonttools
 edge-tts

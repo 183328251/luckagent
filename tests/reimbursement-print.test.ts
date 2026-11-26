@@ -56,7 +56,7 @@ function harness(records = [detail()]) {
   const approvals = {
     latest: vi.fn(async () => ({ records, financeReady: true })),
     detail: vi.fn(async () => records[0]),
-    name: vi.fn(async () => '示例员工'),
+    name: vi.fn(async (_userId: string) => '示例员工'),
     financeReady: vi.fn(async () => true),
   };
   const sender = {
@@ -242,6 +242,40 @@ describe('private selection and print workflow', () => {
       await h.service.handleCardAction(h.selection());
       expect(h.render).not.toHaveBeenCalled();
     }
+  });
+  it('prints the latest approval actions and pending tasks in chronological order', async () => {
+    const h = harness([detail('one', 'PENDING')]);
+    await h.service.handleMessage(h.msg);
+    h.approvals.name.mockClear().mockImplementation(async (id) => {
+      if (id === 'alice') return '示例员工';
+      if (id === 'manager') return '部门负责人';
+      throw new Error('outside directory scope');
+    });
+    h.approvals.detail.mockResolvedValue({
+      ...detail('one', 'PENDING'),
+      start_time: '1767225600000',
+      task_list: [
+        { id: 'task-m', status: 'APPROVED', node_name: '部门审批', open_id: 'manager' },
+        { id: 'task-f', status: 'PENDING', node_id: 'finance', node_name: '财务审核', open_id: 'finance-user',
+          start_time: '1767225720000', end_time: '0' },
+      ],
+      timeline: [
+        { type: 'PASS', task_id: 'task-m', open_id: 'manager', create_time: '1767225660000', comment: '同意报销' },
+        { type: 'START', create_time: '1767225600000' },
+        { type: 'CC', open_id: 'manager', create_time: '1767225780000' },
+      ],
+    });
+    await h.service.handleCardAction(h.selection());
+    expect(h.render).toHaveBeenCalledWith(expect.objectContaining({
+      approval_rows: [
+        { node: '发起申请', person: '示例员工', action: '发起申请', time: '2026-01-01 08:00', comment: '—' },
+        { node: '部门审批', person: '部门负责人', action: '同意', time: '2026-01-01 08:01', comment: '同意报销' },
+        { node: '财务审核', person: '姓名不可用', action: '待审批', time: '2026-01-01 08:02', comment: '—' },
+        { node: '—', person: '部门负责人', action: '抄送', time: '2026-01-01 08:03', comment: '—' },
+      ],
+    }));
+    expect(h.approvals.name.mock.calls).toEqual([['alice'], ['manager'], ['finance-user']]);
+    expect(h.sender.sendFile).toHaveBeenCalledOnce();
   });
   it('deduplicates double click and cleans up after one successful send', async () => {
     const h = harness();

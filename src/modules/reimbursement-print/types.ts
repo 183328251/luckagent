@@ -23,7 +23,33 @@ export interface ApprovalDetail {
   serial_number: string;
   status: string;
   form: string;
-  task_list: { status: string; node_id?: string }[];
+  task_list: ApprovalTask[];
+  timeline?: ApprovalEvent[];
+}
+interface ApprovalTask {
+  id?: string;
+  status: string;
+  node_id?: string;
+  node_name?: string;
+  open_id?: string;
+  type?: string;
+  start_time?: string;
+  end_time?: string;
+}
+interface ApprovalEvent {
+  type: string;
+  task_id?: string;
+  node_key?: string;
+  open_id?: string;
+  create_time?: string;
+  comment?: string;
+}
+export interface PrintApprovalRow {
+  node: string;
+  person: string;
+  action: string;
+  time: string;
+  comment: string;
 }
 export interface PrintRow {
   date: string;
@@ -41,6 +67,7 @@ export interface PrintData {
   title: string;
   date: string;
   fields: Record<string, string>;
+  approval_rows?: PrintApprovalRow[];
 }
 export class PrintError extends Error {
   constructor(
